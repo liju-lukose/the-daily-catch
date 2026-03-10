@@ -1,105 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700;800&family=Rubik:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Saltwater Signal Palette */
+    --salt-white: 210 17% 98%;
+    --shallow-grey: 210 14% 93%;
+    --deep-water: 210 11% 15%;
+    --buoy-orange: 27 98% 54%;
+    --kelp-green: 168 54% 27%;
+    --hairline: 210 14% 87%;
+    --ice-blue: 200 30% 95%;
+
+    --background: var(--salt-white);
+    --foreground: var(--deep-water);
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: var(--deep-water);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: var(--deep-water);
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: var(--buoy-orange);
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: var(--shallow-grey);
+    --secondary-foreground: var(--deep-water);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: var(--shallow-grey);
+    --muted-foreground: 210 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: var(--kelp-green);
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: var(--hairline);
+    --input: var(--hairline);
+    --ring: var(--buoy-orange);
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: var(--deep-water);
+    --sidebar-foreground: var(--salt-white);
+    --sidebar-primary: var(--buoy-orange);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-}
+    --sidebar-accent: 210 11% 22%;
+    --sidebar-accent-foreground: var(--salt-white);
+    --sidebar-border: 210 11% 25%;
+    --sidebar-ring: var(--buoy-orange);
 
-@layer base {
+    /* Typography */
+    --font-display: 'Roboto Slab', serif;
+    --font-body: 'Rubik', sans-serif;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .section-title {
+    @apply font-display text-2xl md:text-3xl font-bold text-foreground tracking-tight;
+  }
+
+  .product-card {
+    @apply bg-card border border-border rounded-sm overflow-hidden transition-all duration-200 hover:border-muted-foreground/30;
+  }
+
+  .tag-fresh {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium font-display bg-accent text-accent-foreground rounded-sm;
+  }
+
+  .tag-urgent {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium font-display bg-primary text-primary-foreground rounded-sm;
+  }
+
+  .btn-cart {
+    @apply bg-primary text-primary-foreground font-display font-semibold px-4 py-2 rounded-sm hover:brightness-110 transition-all duration-200 active:scale-[0.97];
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-display font-medium px-4 py-2 rounded-sm border border-border hover:bg-muted transition-colors;
+  }
+
+  .nav-link {
+    @apply font-display text-sm font-medium text-foreground/80 hover:text-foreground transition-colors uppercase tracking-wider;
+  }
+
+  .counter-badge {
+    @apply absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-display font-bold w-5 h-5 rounded-full flex items-center justify-center;
+  }
+
+  .input-field {
+    @apply w-full bg-secondary border border-border rounded-sm px-3 py-2 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors;
+  }
+
+  .dashboard-card {
+    @apply bg-card border border-border rounded-sm p-5;
   }
 }
