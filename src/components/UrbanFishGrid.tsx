@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion';
-import { ShoppingCart } from 'lucide-react';
 import { FishProduct } from '@/lib/types';
 import { getProductImage } from '@/lib/images';
-import { useCart } from '@/lib/cart-context';
 import { Link } from 'react-router-dom';
 
 interface Props {
@@ -11,7 +9,6 @@ interface Props {
 }
 
 export default function UrbanFishGrid({ products, showAll = false }: Props) {
-  const { addItem } = useCart();
   const displayed = showAll ? products : products.filter(p => !p.isCatchOfTheDay);
 
   return (
@@ -38,36 +35,35 @@ export default function UrbanFishGrid({ products, showAll = false }: Props) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="product-card group"
             >
-              <div className="relative aspect-square overflow-hidden bg-deep-water">
-                <img
-                  src={getProductImage(product.id)}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                {product.freshnessTags.length > 0 && (
-                  <div className="absolute top-2 left-2">
-                    <span className="tag-fresh text-[10px]">{product.freshnessTags[0]}</span>
-                  </div>
-                )}
-              </div>
-              <div className="p-3">
-                <h3 className="font-display text-sm font-semibold truncate">{product.name}</h3>
-                <p className="text-xs text-muted-foreground">{product.category}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-display text-base font-bold text-buoy-orange">
-                    ₹{product.pricePerKg}<span className="text-[10px] font-normal text-muted-foreground">/kg</span>
-                  </span>
-                  <button
-                    onClick={() => addItem(product, product.weightOptions[0])}
-                    className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-sm hover:brightness-110 transition-all"
-                  >
-                    <ShoppingCart className="w-3.5 h-3.5" />
-                  </button>
+              <Link to={`/fish/${product.id}`} className="product-card group block rounded-lg">
+                <div className="relative aspect-square overflow-hidden bg-secondary rounded-t-lg">
+                  <img
+                    src={getProductImage(product.id)}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300" />
+                  {product.freshnessTags.length > 0 && (
+                    <div className="absolute top-2 left-2">
+                      <span className="tag-fresh text-[10px]">{product.freshnessTags[0]}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+                <div className="p-3">
+                  <h3 className="font-display text-sm font-semibold truncate">{product.name}</h3>
+                  <p className="text-xs text-muted-foreground">{product.category}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-display text-base font-bold text-primary">
+                      ₹{product.pricePerKg}<span className="text-[10px] font-normal text-muted-foreground">/kg</span>
+                    </span>
+                    <span className="text-xs text-primary font-display font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                      View →
+                    </span>
+                  </div>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>
