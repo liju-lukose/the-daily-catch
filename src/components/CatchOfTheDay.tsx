@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, ShoppingCart } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { FishProduct } from '@/lib/types';
 import { getProductImage } from '@/lib/images';
-import { useCart } from '@/lib/cart-context';
+import { Link } from 'react-router-dom';
 
 interface Props {
   products: FishProduct[];
@@ -38,8 +38,6 @@ function CountdownTimer() {
 }
 
 export default function CatchOfTheDay({ products }: Props) {
-  const { addItem } = useCart();
-
   return (
     <section id="catch-of-the-day" className="py-10 md:py-14">
       <div className="container mx-auto px-4">
@@ -61,54 +59,52 @@ export default function CatchOfTheDay({ products }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="product-card group"
             >
-              <div className="relative aspect-square overflow-hidden bg-deep-water">
-                <img
-                  src={getProductImage(product.id)}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                  {product.freshnessTags.map(tag => (
-                    <span key={tag} className={tag.includes('Fresh') ? 'tag-urgent' : 'tag-fresh'}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="absolute bottom-3 right-3">
-                  <span className="bg-deep-water/80 text-salt-white text-xs font-display px-2 py-1 rounded-sm">
-                    {product.stock} left
-                  </span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-display text-base font-semibold">{product.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{product.origin}</p>
+              <Link to={`/fish/${product.id}`} className="product-card group block rounded-lg">
+                <div className="relative aspect-square overflow-hidden bg-secondary rounded-t-lg">
+                  <img
+                    src={getProductImage(product.id)}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300" />
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                    {product.freshnessTags.map(tag => (
+                      <span key={tag} className={tag.includes('Fresh') ? 'tag-urgent' : 'tag-fresh'}>
+                        {tag}
+                      </span>
+                    ))}
                   </div>
-                  <span className="font-display text-lg font-bold text-buoy-orange whitespace-nowrap">
-                    ₹{product.pricePerKg}<span className="text-xs font-normal text-muted-foreground">/kg</span>
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2 font-body">{product.description}</p>
-                <div className="flex items-center gap-2 mt-3">
-                  {product.weightOptions.slice(0, 3).map(w => (
-                    <span key={w} className="text-xs border border-border rounded-sm px-2 py-0.5 font-display">
-                      {w >= 1000 ? `${w / 1000}kg` : `${w}g`}
+                  <div className="absolute bottom-3 right-3">
+                    <span className="bg-foreground/70 text-background text-xs font-display px-2 py-1 rounded-sm backdrop-blur-sm">
+                      {product.stock} left
                     </span>
-                  ))}
+                  </div>
                 </div>
-                <button
-                  onClick={() => addItem(product, product.weightOptions[0])}
-                  className="btn-cart w-full mt-4 flex items-center justify-center gap-2 text-sm"
-                >
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Add to Cart
-                </button>
-              </div>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-display text-base font-semibold">{product.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{product.origin}</p>
+                    </div>
+                    <span className="font-display text-lg font-bold text-primary whitespace-nowrap">
+                      ₹{product.pricePerKg}<span className="text-xs font-normal text-muted-foreground">/kg</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2 font-body">{product.description}</p>
+                  <div className="flex items-center gap-2 mt-3">
+                    {product.weightOptions.slice(0, 3).map(w => (
+                      <span key={w} className="text-xs border border-border rounded-sm px-2 py-0.5 font-display">
+                        {w >= 1000 ? `${w / 1000}kg` : `${w}g`}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-center">
+                    <span className="text-xs text-primary font-display font-semibold group-hover:underline">View Details →</span>
+                  </div>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>

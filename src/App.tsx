@@ -17,6 +17,7 @@ import LoginPage from "./pages/LoginPage";
 import AccountPage from "./pages/AccountPage";
 import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import FishDetailPage from "./pages/FishDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/urban-fish" element={<UrbanFishPage />} />
+              <Route path="/fish/:fishId" element={<FishDetailPage />} />
               <Route path="/cloud-kitchen" element={<CloudKitchenPage />} />
               <Route path="/stores" element={<StoresPage />} />
               <Route path="/stores/:storeId" element={<StoreDetailPage />} />
