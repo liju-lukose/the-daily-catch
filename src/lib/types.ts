@@ -24,6 +24,13 @@ export interface Store {
   isActive: boolean;
 }
 
+export interface CuttingType {
+  id: string;
+  name: string;
+  image: string;
+  description?: string;
+}
+
 export interface FishProduct {
   id: string;
   storeId?: string;
@@ -38,6 +45,7 @@ export interface FishProduct {
   freshnessTags: string[];
   origin?: string;
   isUrbanFish: boolean;
+  cuttingTypes?: CuttingType[];
 }
 
 export interface KitchenMenuItem {
@@ -58,14 +66,19 @@ export interface CartItem {
   quantity: number;
   weight?: number;
   storeId?: string;
+  cuttingType?: string;
+  deliveryInstructions?: string;
+  customerNote?: string;
 }
 
 export interface Order {
   id: string;
   userId: string;
+  customerName: string;
+  customerEmail: string;
   items: CartItem[];
   total: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'packed' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  status: 'order_received' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
   deliveryAddress: Address;
   createdAt: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
@@ -75,12 +88,15 @@ export interface Address {
   id: string;
   userId: string;
   label: string;
+  fullName: string;
   line1: string;
   line2?: string;
   city: string;
   state: string;
   pincode: string;
   phone: string;
+  lat?: number;
+  lng?: number;
   isDefault: boolean;
 }
 

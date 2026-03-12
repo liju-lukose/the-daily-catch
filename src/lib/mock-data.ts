@@ -1,4 +1,25 @@
-import { FishProduct, KitchenMenuItem, Store } from './types';
+import { FishProduct, KitchenMenuItem, Store, Order, CuttingType } from './types';
+
+// Common cutting types
+export const defaultCuttingTypes: CuttingType[] = [
+  { id: 'ct-1', name: 'Whole Fish', image: '🐟', description: 'Complete fish, cleaned and scaled' },
+  { id: 'ct-2', name: 'Fillet', image: '🔪', description: 'Boneless fillet cuts' },
+  { id: 'ct-3', name: 'Steaks', image: '🥩', description: 'Cross-cut steaks with bone' },
+  { id: 'ct-4', name: 'Cubes', image: '🧊', description: 'Bite-sized cubes for curry' },
+  { id: 'ct-5', name: 'Cleaned Only', image: '✨', description: 'Cleaned, gutted, scales removed' },
+];
+
+export const shrimpCuttingTypes: CuttingType[] = [
+  { id: 'ct-6', name: 'Shell On', image: '🦐', description: 'With shell, deveined' },
+  { id: 'ct-7', name: 'Peeled', image: '🍤', description: 'Shell removed, deveined' },
+  { id: 'ct-8', name: 'Butterfly', image: '🦋', description: 'Split and flattened' },
+];
+
+export const squidCuttingTypes: CuttingType[] = [
+  { id: 'ct-9', name: 'Rings', image: '⭕', description: 'Classic calamari rings' },
+  { id: 'ct-10', name: 'Strips', image: '📏', description: 'Long strips for stir-fry' },
+  { id: 'ct-11', name: 'Whole Cleaned', image: '✨', description: 'Whole tube, cleaned' },
+];
 
 export const mockCatchOfTheDay: FishProduct[] = [
   {
@@ -14,6 +35,7 @@ export const mockCatchOfTheDay: FishProduct[] = [
     freshnessTags: ["Today's Fresh Catch", 'Wild Caught'],
     origin: 'North Atlantic',
     isUrbanFish: true,
+    cuttingTypes: defaultCuttingTypes,
   },
   {
     id: 'prawn-1',
@@ -28,6 +50,7 @@ export const mockCatchOfTheDay: FishProduct[] = [
     freshnessTags: ["Today's Fresh Catch", 'Sustainable'],
     origin: 'Coastal Farm',
     isUrbanFish: true,
+    cuttingTypes: shrimpCuttingTypes,
   },
   {
     id: 'salmon-1',
@@ -42,6 +65,7 @@ export const mockCatchOfTheDay: FishProduct[] = [
     freshnessTags: ["Today's Fresh Catch", 'Premium'],
     origin: 'Norway',
     isUrbanFish: true,
+    cuttingTypes: defaultCuttingTypes,
   },
 ];
 
@@ -60,6 +84,7 @@ export const mockUrbanFishProducts: FishProduct[] = [
     freshnessTags: ['Wild Caught'],
     origin: 'Arabian Sea',
     isUrbanFish: true,
+    cuttingTypes: defaultCuttingTypes,
   },
   {
     id: 'seer-1',
@@ -74,6 +99,7 @@ export const mockUrbanFishProducts: FishProduct[] = [
     freshnessTags: ['Fresh'],
     origin: 'Indian Ocean',
     isUrbanFish: true,
+    cuttingTypes: defaultCuttingTypes,
   },
   {
     id: 'squid-1',
@@ -88,6 +114,7 @@ export const mockUrbanFishProducts: FishProduct[] = [
     freshnessTags: ['Cleaned'],
     origin: 'Coastal Waters',
     isUrbanFish: true,
+    cuttingTypes: squidCuttingTypes,
   },
 ];
 
@@ -199,6 +226,7 @@ export const mockStoreProducts: Record<string, FishProduct[]> = {
       isCatchOfTheDay: true,
       freshnessTags: ["Today's Fresh Catch"],
       isUrbanFish: false,
+      cuttingTypes: defaultCuttingTypes,
     },
     {
       id: 'sp-2',
@@ -229,6 +257,7 @@ export const mockStoreProducts: Record<string, FishProduct[]> = {
       isCatchOfTheDay: false,
       freshnessTags: ['Premium', 'Sashimi Grade'],
       isUrbanFish: false,
+      cuttingTypes: defaultCuttingTypes,
     },
   ],
   'store-3': [
@@ -245,6 +274,99 @@ export const mockStoreProducts: Record<string, FishProduct[]> = {
       isCatchOfTheDay: false,
       freshnessTags: ['Sustainable', 'Wild Caught'],
       isUrbanFish: false,
+      cuttingTypes: defaultCuttingTypes,
     },
   ],
 };
+
+// Mock orders for admin dashboard
+export const mockOrders: Order[] = [
+  {
+    id: 'ORD-1001',
+    userId: 'user-1',
+    customerName: 'Rahul Sharma',
+    customerEmail: 'rahul@example.com',
+    items: [
+      { product: mockUrbanFishProducts[0], quantity: 2, weight: 1000 },
+      { product: mockKitchenMenu[0], quantity: 1 },
+    ],
+    total: 2150,
+    status: 'order_received',
+    deliveryAddress: {
+      id: 'addr-1', userId: 'user-1', label: 'Home', fullName: 'Rahul Sharma',
+      line1: '12, MG Road', city: 'Mumbai', state: 'Maharashtra', pincode: '400001', phone: '9876543210', isDefault: true,
+    },
+    createdAt: new Date().toISOString(),
+    paymentStatus: 'paid',
+  },
+  {
+    id: 'ORD-1002',
+    userId: 'user-2',
+    customerName: 'Priya Nair',
+    customerEmail: 'priya@example.com',
+    items: [
+      { product: mockUrbanFishProducts[1], quantity: 1, weight: 500 },
+    ],
+    total: 600,
+    status: 'preparing',
+    deliveryAddress: {
+      id: 'addr-2', userId: 'user-2', label: 'Office', fullName: 'Priya Nair',
+      line1: '45, Linking Road', city: 'Mumbai', state: 'Maharashtra', pincode: '400050', phone: '9123456789', isDefault: true,
+    },
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    paymentStatus: 'paid',
+  },
+  {
+    id: 'ORD-1003',
+    userId: 'user-3',
+    customerName: 'Arun Kumar',
+    customerEmail: 'arun@example.com',
+    items: [
+      { product: mockKitchenMenu[1], quantity: 2 },
+      { product: mockKitchenMenu[3], quantity: 1 },
+    ],
+    total: 1040,
+    status: 'out_for_delivery',
+    deliveryAddress: {
+      id: 'addr-3', userId: 'user-3', label: 'Home', fullName: 'Arun Kumar',
+      line1: '78, Anna Salai', city: 'Chennai', state: 'Tamil Nadu', pincode: '600002', phone: '9988776655', isDefault: true,
+    },
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+    paymentStatus: 'paid',
+  },
+  {
+    id: 'ORD-1004',
+    userId: 'user-4',
+    customerName: 'Sneha Patel',
+    customerEmail: 'sneha@example.com',
+    items: [
+      { product: mockUrbanFishProducts[3], quantity: 1, weight: 1000 },
+    ],
+    total: 950,
+    status: 'delivered',
+    deliveryAddress: {
+      id: 'addr-4', userId: 'user-4', label: 'Home', fullName: 'Sneha Patel',
+      line1: '23, SG Highway', city: 'Ahmedabad', state: 'Gujarat', pincode: '380015', phone: '9876501234', isDefault: true,
+    },
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    paymentStatus: 'paid',
+  },
+  {
+    id: 'ORD-1005',
+    userId: 'user-5',
+    customerName: 'Deepak Reddy',
+    customerEmail: 'deepak@example.com',
+    items: [
+      { product: mockUrbanFishProducts[4], quantity: 1, weight: 2000 },
+      { product: mockKitchenMenu[2], quantity: 3 },
+    ],
+    total: 3160,
+    status: 'delivered',
+    deliveryAddress: {
+      id: 'addr-5', userId: 'user-5', label: 'Home', fullName: 'Deepak Reddy',
+      line1: '56, Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500033', phone: '9012345678', isDefault: true,
+    },
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+    paymentStatus: 'paid',
+  },
+];
