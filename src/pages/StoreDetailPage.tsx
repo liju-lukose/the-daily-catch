@@ -74,7 +74,7 @@ export default function StoreDetailPage() {
                     <p className="text-xs text-muted-foreground">{product.category}</p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="font-display text-base font-bold text-buoy-orange">₹{product.pricePerKg}<span className="text-[10px] text-muted-foreground">/kg</span></span>
-                      <button onClick={() => addItem(product, product.weightOptions[0], product.storeId)} className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-sm">
+                      <button onClick={() => addItem(product, { weight: product.weightOptions[0], storeId: product.storeId })} className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-lg">
                         <ShoppingCart className="w-3.5 h-3.5" />
                       </button>
                     </div>

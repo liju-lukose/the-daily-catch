@@ -1,12 +1,23 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCart } from '@/lib/cart-context';
+import { useAuth } from '@/lib/auth-context';
 import { getProductImage } from '@/lib/images';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleProceed = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { returnTo: '/checkout' } });
+    } else {
+      navigate('/checkout');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -18,7 +29,7 @@ export default function CartPage() {
           {items.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-muted-foreground font-body mb-4">Your cart is empty.</p>
-              <Link to="/" className="btn-cart">Start Shopping</Link>
+              <Link to="/" className="btn-cart rounded-lg">Start Shopping</Link>
             </div>
           ) : (
             <>
@@ -30,25 +41,33 @@ export default function CartPage() {
                     : (item.product as any).price;
 
                   return (
-                    <div key={item.product.id} className="product-card p-4 flex items-center gap-4">
+                    <div key={item.product.id + (item.cuttingType || '')} className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
                       <img
                         src={getProductImage(item.product.id)}
                         alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded-sm flex-shrink-0"
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-display text-sm font-semibold truncate">{item.product.name}</h3>
-                        {isFish && item.weight && (
-                          <p className="text-xs text-muted-foreground">{item.weight >= 1000 ? `${item.weight / 1000}kg` : `${item.weight}g`}</p>
+                        <div className="flex flex-wrap gap-2 mt-0.5">
+                          {isFish && item.weight && (
+                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{item.weight >= 1000 ? `${item.weight / 1000}kg` : `${item.weight}g`}</span>
+                          )}
+                          {item.cuttingType && (
+                            <span className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">{item.cuttingType}</span>
+                          )}
+                        </div>
+                        {item.customerNote && (
+                          <p className="text-xs text-muted-foreground mt-1 italic">Note: {item.customerNote}</p>
                         )}
-                        <p className="font-display text-sm font-bold text-buoy-orange mt-0.5">₹{price}</p>
+                        <p className="font-display text-sm font-bold text-primary mt-1">₹{price}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center border border-border rounded-sm hover:bg-secondary">
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center border border-border rounded-lg hover:bg-secondary transition-colors">
                           <Minus className="w-3 h-3" />
                         </button>
                         <span className="font-display text-sm font-semibold w-6 text-center">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center border border-border rounded-sm hover:bg-secondary">
+                        <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center border border-border rounded-lg hover:bg-secondary transition-colors">
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>
@@ -60,23 +79,22 @@ export default function CartPage() {
                 })}
               </div>
 
-              {/* Summary */}
-              <div className="product-card p-5 mt-6">
+              <div className="bg-card border border-border rounded-xl p-5 mt-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-body text-sm text-muted-foreground">Subtotal</span>
                   <span className="font-display text-lg font-bold">₹{totalPrice.toFixed(0)}</span>
                 </div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-body text-sm text-muted-foreground">Delivery</span>
-                  <span className="font-display text-sm font-semibold text-kelp-green">Free</span>
+                  <span className="font-display text-sm font-semibold text-accent">Free</span>
                 </div>
                 <div className="border-t border-border pt-4 flex items-center justify-between">
                   <span className="font-display text-base font-bold">Total</span>
-                  <span className="font-display text-xl font-bold text-buoy-orange">₹{totalPrice.toFixed(0)}</span>
+                  <span className="font-display text-xl font-bold text-primary">₹{totalPrice.toFixed(0)}</span>
                 </div>
-                <Link to="/checkout" className="btn-cart w-full mt-4 block text-center">
-                  Proceed to Checkout
-                </Link>
+                <button onClick={handleProceed} className="btn-cart w-full mt-4 rounded-lg py-3 text-base">
+                  Proceed to Payment
+                </button>
                 <button onClick={clearCart} className="w-full text-center text-xs text-muted-foreground mt-2 hover:text-destructive transition-colors">
                   Clear Cart
                 </button>
