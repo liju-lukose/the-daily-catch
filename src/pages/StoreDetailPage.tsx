@@ -1,16 +1,36 @@
 import { useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { mockStores, mockStoreProducts } from '@/lib/mock-data';
+import { useStores, useStoreProducts } from '@/hooks/useApi';
 import { getProductImage } from '@/lib/images';
 import { useCart } from '@/lib/cart-context';
 import { Star, MapPin, Clock, ShoppingCart } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function StoreDetailPage() {
   const { storeId } = useParams();
-  const store = mockStores.find(s => s.id === storeId);
-  const products = mockStoreProducts[storeId || ''] || [];
+  const { data: stores, isLoading: loadingStores } = useStores();
+  const { data: products, isLoading: loadingProducts } = useStoreProducts(storeId || '');
   const { addItem } = useCart();
+
+  const store = stores?.find(s => s.id === storeId);
+
+  if (loadingStores) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 py-10">
+          <div className="container mx-auto px-4">
+            <Skeleton className="h-32 rounded-xl mb-8" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!store) {
     return (
@@ -29,7 +49,6 @@ export default function StoreDetailPage() {
       <Header />
       <main className="flex-1 py-10">
         <div className="container mx-auto px-4">
-          {/* Store Header */}
           <div className="product-card p-6 mb-8">
             <div className="flex items-start gap-5">
               <div className="w-16 h-16 rounded-sm bg-kelp-green/10 flex items-center justify-center flex-shrink-0">
@@ -51,13 +70,16 @@ export default function StoreDetailPage() {
             </div>
           </div>
 
-          {/* Products */}
           <h2 className="section-title text-xl mb-4">Available Products</h2>
-          {products.length === 0 ? (
+          {loadingProducts ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
+            </div>
+          ) : (products ?? []).length === 0 ? (
             <p className="text-muted-foreground text-sm">No products available at this time.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map(product => (
+              {(products ?? []).map(product => (
                 <div key={product.id} className="product-card group">
                   <div className="relative aspect-square overflow-hidden bg-deep-water">
                     <img src={getProductImage(product.id)} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
