@@ -2,12 +2,11 @@ import { useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { mockUrbanFishProducts, mockKitchenMenu, mockStores as initialMockStores, mockOrders } from '@/lib/mock-data';
-import { Order, Expense, AdminFishProduct, Store } from '@/lib/types';
+import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem } from '@/lib/types';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Package, UtensilsCrossed, Store as StoreIcon, ShoppingBag, TrendingUp, Settings, LogOut,
-  Plus, X, Search, Filter, Calendar
+  Plus, X, Search, Filter, Calendar, Edit, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
