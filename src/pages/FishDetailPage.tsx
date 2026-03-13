@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 import { Heart, Brain, Shield, Dumbbell, Eye, Bone, Minus, Plus, ShoppingCart, ChevronLeft, UtensilsCrossed, Scissors, MessageSquare } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { mockUrbanFishProducts, mockStoreProducts } from '@/lib/mock-data';
+import { useFishDetail } from '@/hooks/useApi';
 import { getProductImage } from '@/lib/images';
 import { useCart } from '@/lib/cart-context';
 import { fishHealthBenefits, fishDishSuggestions, defaultHealthBenefits, defaultDishSuggestions } from '@/lib/fish-data';
-import type { FishProduct } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
   Heart, Brain, Shield, Dumbbell, Eye, Bone,
@@ -19,17 +19,38 @@ export default function FishDetailPage() {
   const { fishId } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { data: product, isLoading } = useFishDetail(fishId || '');
 
-  const allProducts = [
-    ...mockUrbanFishProducts,
-    ...Object.values(mockStoreProducts).flat(),
-  ];
-  const product = allProducts.find(p => p.id === fishId);
-
-  const [selectedWeight, setSelectedWeight] = useState<number>(product?.weightOptions[0] ?? 500);
+  const [selectedWeight, setSelectedWeight] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedCutting, setSelectedCutting] = useState<string | undefined>(product?.cuttingTypes?.[0]?.id);
+  const [selectedCutting, setSelectedCutting] = useState<string | undefined>(undefined);
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
+
+  // Set defaults once product loads
+  const weight = selectedWeight ?? product?.weightOptions[0] ?? 500;
+  const cutting = selectedCutting ?? product?.cuttingTypes?.[0]?.id;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 py-10">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Skeleton className="aspect-square rounded-xl" />
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-12 w-32" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -45,13 +66,13 @@ export default function FishDetailPage() {
 
   const benefits = fishHealthBenefits[product.id] ?? defaultHealthBenefits;
   const dishes = fishDishSuggestions[product.id] ?? defaultDishSuggestions;
-  const unitPrice = product.pricePerKg * (selectedWeight / 1000);
+  const unitPrice = product.pricePerKg * (weight / 1000);
   const cuttingTypes = product.cuttingTypes ?? [];
 
   const handleAddToCart = () => {
-    const cuttingName = cuttingTypes.find(c => c.id === selectedCutting)?.name;
+    const cuttingName = cuttingTypes.find(c => c.id === cutting)?.name;
     addItem(product, {
-      weight: selectedWeight,
+      weight,
       storeId: product.storeId,
       cuttingType: cuttingName,
       deliveryInstructions: deliveryInstructions || undefined,
@@ -69,7 +90,6 @@ export default function FishDetailPage() {
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
 
-          {/* Hero section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
               <img src={getProductImage(product.id)} alt={product.name} className="w-full h-full object-cover" />
@@ -90,26 +110,21 @@ export default function FishDetailPage() {
 
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="font-display text-3xl font-bold text-primary">₹{unitPrice.toFixed(0)}</span>
-                <span className="text-sm text-muted-foreground font-body">for {selectedWeight >= 1000 ? `${selectedWeight / 1000}kg` : `${selectedWeight}g`}</span>
+                <span className="text-sm text-muted-foreground font-body">for {weight >= 1000 ? `${weight / 1000}kg` : `${weight}g`}</span>
               </div>
 
-              {/* Weight selector */}
               <div className="mt-5">
                 <span className="text-sm font-display font-semibold">Select Weight</span>
                 <div className="flex gap-2 mt-2">
                   {product.weightOptions.map(w => (
-                    <button
-                      key={w}
-                      onClick={() => setSelectedWeight(w)}
-                      className={`px-4 py-2 rounded-lg text-sm font-display border-2 transition-all ${selectedWeight === w ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'border-border bg-card hover:border-muted-foreground/40'}`}
-                    >
+                    <button key={w} onClick={() => setSelectedWeight(w)}
+                      className={`px-4 py-2 rounded-lg text-sm font-display border-2 transition-all ${weight === w ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'border-border bg-card hover:border-muted-foreground/40'}`}>
                       {w >= 1000 ? `${w / 1000} kg` : `${w}g`}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Quantity selector */}
               <div className="mt-5">
                 <span className="text-sm font-display font-semibold">Quantity</span>
                 <div className="flex items-center gap-3 mt-2">
@@ -125,7 +140,6 @@ export default function FishDetailPage() {
 
               <p className="text-xs text-muted-foreground mt-4 font-body">{product.stock} units available</p>
 
-              {/* Add to cart */}
               <button onClick={handleAddToCart} className="btn-cart mt-6 flex items-center justify-center gap-2 text-base py-3.5 w-full md:w-auto md:px-12 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
                 <ShoppingCart className="w-5 h-5" />
                 Add to Cart — ₹{(unitPrice * quantity).toFixed(0)}
@@ -133,7 +147,6 @@ export default function FishDetailPage() {
             </motion.div>
           </div>
 
-          {/* Cutting Type Selector */}
           {cuttingTypes.length > 0 && (
             <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-12">
               <div className="flex items-center gap-2 mb-4">
@@ -142,42 +155,27 @@ export default function FishDetailPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {cuttingTypes.map(ct => (
-                  <button
-                    key={ct.id}
-                    onClick={() => setSelectedCutting(ct.id)}
-                    className={`bg-card border-2 rounded-xl p-4 text-left transition-all hover:shadow-md ${
-                      selectedCutting === ct.id
-                        ? 'border-primary shadow-md ring-2 ring-primary/20'
-                        : 'border-border hover:border-muted-foreground/40'
-                    }`}
-                  >
+                  <button key={ct.id} onClick={() => setSelectedCutting(ct.id)}
+                    className={`bg-card border-2 rounded-xl p-4 text-left transition-all hover:shadow-md ${cutting === ct.id ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground/40'}`}>
                     <span className="text-3xl block mb-2">{ct.image}</span>
                     <span className="font-display text-sm font-semibold block">{ct.name}</span>
-                    {ct.description && (
-                      <span className="text-xs text-muted-foreground font-body mt-1 block">{ct.description}</span>
-                    )}
+                    {ct.description && <span className="text-xs text-muted-foreground font-body mt-1 block">{ct.description}</span>}
                   </button>
                 ))}
               </div>
             </motion.section>
           )}
 
-          {/* Delivery Instructions */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-12">
             <div className="flex items-center gap-2 mb-4">
               <MessageSquare className="w-5 h-5 text-primary" />
               <h2 className="section-title text-xl">Delivery Instructions</h2>
             </div>
-            <Textarea
-              value={deliveryInstructions}
-              onChange={e => setDeliveryInstructions(e.target.value)}
+            <Textarea value={deliveryInstructions} onChange={e => setDeliveryInstructions(e.target.value)}
               placeholder="Add any delivery instructions (optional) — e.g., call before delivery, leave at door, etc."
-              className="max-w-xl bg-card border-border rounded-lg resize-none"
-              rows={3}
-            />
+              className="max-w-xl bg-card border-border rounded-lg resize-none" rows={3} />
           </motion.section>
 
-          {/* Health Benefits */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mb-12">
             <h2 className="section-title mb-6">Health Benefits</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -196,22 +194,16 @@ export default function FishDetailPage() {
             </div>
           </motion.section>
 
-          {/* Dish Suggestions */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-12">
             <h2 className="section-title mb-2">Dish Ideas</h2>
             <p className="text-sm text-muted-foreground font-body mb-6">Delicious ways to prepare {product.name}</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {dishes.map(dish => (
-                <Link
-                  key={dish.id}
-                  to={dish.kitchenMenuId ? `/cloud-kitchen?dish=${dish.kitchenMenuId}` : '/cloud-kitchen'}
-                  className="bg-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all group"
-                >
+                <Link key={dish.id} to={dish.kitchenMenuId ? `/cloud-kitchen?dish=${dish.kitchenMenuId}` : '/cloud-kitchen'}
+                  className="bg-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all group">
                   <UtensilsCrossed className="w-5 h-5 text-primary mb-2 group-hover:scale-110 transition-transform" />
                   <span className="font-display text-sm font-semibold">{dish.name}</span>
-                  {dish.kitchenMenuId && (
-                    <p className="text-[10px] text-primary mt-1 font-body">Available in Cloud Kitchen →</p>
-                  )}
+                  {dish.kitchenMenuId && <p className="text-[10px] text-primary mt-1 font-body">Available in Cloud Kitchen →</p>}
                 </Link>
               ))}
             </div>
