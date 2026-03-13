@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
+import { authApi } from '@/api/authApi';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
@@ -12,28 +13,44 @@ export default function LoginPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login, register, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const returnTo = (location.state as any)?.returnTo || null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    if (isRegister) {
-      register(name, email, phone, password);
-      navigate(returnTo || '/');
-    } else {
-      const result = login(email, password);
-      if (!result.success) {
-        setError(result.error || 'Login failed');
-        return;
+    try {
+      if (isRegister) {
+        register(name, email, phone, password);
+        navigate(returnTo || '/');
+      } else {
+        // Call API layer (currently mocked)
+        const apiResult = await authApi.login(email, password);
+        if (!apiResult.success) {
+          setError(apiResult.error || 'Login failed');
+          return;
+        }
+        // Also set local auth context
+        const result = login(email, password);
+        if (!result.success) {
+          setError(result.error || 'Login failed');
+          return;
+        }
+        setTimeout(() => {
+          if (email === 'seller@test.com') navigate(returnTo || '/seller');
+          else if (email === 'admin@test.com') navigate(returnTo || '/admin');
+          else navigate(returnTo || '/');
+        }, 0);
       }
-      setTimeout(() => {
-        if (email === 'seller@test.com') navigate(returnTo || '/seller');
-        else navigate(returnTo || '/');
-      }, 0);
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,8 +82,8 @@ export default function LoginPage() {
             <input className="input-field rounded-lg" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
             <input className="input-field rounded-lg" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
 
-            <button type="submit" className="btn-cart w-full mt-2 rounded-lg py-3">
-              {isRegister ? 'Sign Up' : 'Log In'}
+            <button type="submit" className="btn-cart w-full mt-2 rounded-lg py-3" disabled={loading}>
+              {loading ? 'Please wait...' : (isRegister ? 'Sign Up' : 'Log In')}
             </button>
           </form>
 

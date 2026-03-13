@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { mockUrbanFishProducts, mockKitchenMenu, mockStores as initialMockStores, mockOrders } from '@/lib/mock-data';
+import { useOrders, useUpdateOrderStatus, useExpenses, useCreateExpense, useAdminProducts, useCreateProduct, useStores, useCreateStore, useDishes, useCreateDish, useDeleteDish } from '@/hooks/useApi';
 import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem } from '@/lib/types';
 import Header from '@/components/Header';
 import {
@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ORDER_STATUSES: Order['status'][] = ['order_received', 'preparing', 'out_for_delivery', 'delivered'];
 
@@ -64,34 +65,27 @@ const chartConfig = {
   sales: { label: 'Sales Revenue', color: 'hsl(var(--primary))' },
 };
 
-const initialExpenses: Expense[] = [
-  { id: 'exp-1', name: 'Ice Purchase', description: 'Daily ice supply', amount: 2000, date: '2026-03-13', approverName: 'Admin', approverEmail: 'admin@test.com' },
-  { id: 'exp-2', name: 'Supplier Payment', description: 'Fish supplier', amount: 8000, date: '2026-03-12', approverName: 'Admin', approverEmail: 'admin@test.com' },
-  { id: 'exp-3', name: 'Fuel Expense', description: 'Delivery fuel', amount: 1200, date: '2026-03-11', approverName: 'Admin', approverEmail: 'admin@test.com' },
-  { id: 'exp-4', name: 'Packaging Materials', description: 'Boxes and bags', amount: 900, date: '2026-03-10', approverName: 'Admin', approverEmail: 'admin@test.com' },
-  { id: 'exp-5', name: 'Staff Salary', description: 'Monthly salary', amount: 5000, date: '2026-03-01', approverName: 'Admin', approverEmail: 'admin@test.com' },
-  { id: 'exp-6', name: 'Electricity', description: 'Cold storage', amount: 1500, date: '2026-03-05', approverName: 'Admin', approverEmail: 'admin@test.com' },
-  { id: 'exp-7', name: 'Rent', description: 'Shop rent', amount: 3000, date: '2026-03-01', approverName: 'Admin', approverEmail: 'admin@test.com' },
-];
-
 const revenueBreakdown = { cloudKitchen: 12000, fishMarket: 9500, store: 4200 };
-
-const initialAdminProducts: AdminFishProduct[] = [
-  { id: 'ap-1', name: 'Seer Fish', batchId: 'B001', purchaseDate: '2026-03-10', purchasedPerson: 'Raju', approverName: 'Admin', approverEmail: 'admin@test.com', quantity: 25, purchaseRate: 400, sellingRate: 650, sellingUnit: 'kg', purchasePlace: 'Chennai Harbor', expectedProfit: 6250, expiryDate: '2026-05-12', isCatchOfTheDay: true },
-  { id: 'ap-2', name: 'Pomfret', batchId: 'B002', purchaseDate: '2026-03-11', purchasedPerson: 'Suresh', approverName: 'Admin', approverEmail: 'admin@test.com', quantity: 40, purchaseRate: 300, sellingRate: 500, sellingUnit: 'kg', purchasePlace: 'Mumbai Dock', expectedProfit: 8000, expiryDate: '2026-05-15', isCatchOfTheDay: false },
-  { id: 'ap-3', name: 'Prawns', batchId: 'B003', purchaseDate: '2026-03-12', purchasedPerson: 'Raju', approverName: 'Admin', approverEmail: 'admin@test.com', quantity: 100, purchaseRate: 8, sellingRate: 15, sellingUnit: 'count', purchasePlace: 'Kochi Market', expectedProfit: 700, expiryDate: '2026-04-20', isCatchOfTheDay: true },
-];
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-  const [adminProducts, setAdminProducts] = useState<AdminFishProduct[]>(initialAdminProducts);
-  const [stores, setStores] = useState<Store[]>(initialMockStores);
-  const [kitchenDishes, setKitchenDishes] = useState<KitchenMenuItem[]>([...mockKitchenMenu]);
   const [kitchenTab, setKitchenTab] = useState<'list' | 'add'>('list');
+
+  // API hooks
+  const { data: orders = [], isLoading: loadingOrders } = useOrders();
+  const { data: expenses = [], isLoading: loadingExpenses } = useExpenses();
+  const { data: adminProducts = [], isLoading: loadingProducts } = useAdminProducts();
+  const { data: stores = [], isLoading: loadingStores } = useStores();
+  const { data: kitchenDishes = [], isLoading: loadingDishes } = useDishes();
+
+  const updateOrderStatusMutation = useUpdateOrderStatus();
+  const createExpenseMutation = useCreateExpense();
+  const createProductMutation = useCreateProduct();
+  const createStoreMutation = useCreateStore();
+  const createDishMutation = useCreateDish();
+  const deleteDishMutation = useDeleteDish();
 
   // Modal states
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
@@ -124,7 +118,7 @@ export default function AdminDashboard() {
   });
 
   const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    updateOrderStatusMutation.mutate({ id: orderId, status: newStatus });
   };
 
   const totalRevenue = revenueBreakdown.cloudKitchen + revenueBreakdown.fishMarket + revenueBreakdown.store;
@@ -136,15 +130,17 @@ export default function AdminDashboard() {
       toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
       return;
     }
-    const newExp: Expense = {
-      id: `exp-${Date.now()}`, name: expenseForm.name, description: expenseForm.description,
+    createExpenseMutation.mutate({
+      name: expenseForm.name, description: expenseForm.description,
       amount: Number(expenseForm.amount), date: expenseForm.date || new Date().toISOString().split('T')[0],
       approverName: expenseForm.approverName, approverEmail: expenseForm.approverEmail,
-    };
-    setExpenses(prev => [newExp, ...prev]);
-    setExpenseForm({ name: '', description: '', amount: '', date: '', approverName: '', approverEmail: '' });
-    setExpenseModalOpen(false);
-    toast({ title: 'Expense added successfully' });
+    } as Omit<Expense, 'id'>, {
+      onSuccess: () => {
+        setExpenseForm({ name: '', description: '', amount: '', date: '', approverName: '', approverEmail: '' });
+        setExpenseModalOpen(false);
+        toast({ title: 'Expense added successfully' });
+      },
+    });
   };
 
   const handleSaveProduct = () => {
@@ -152,8 +148,8 @@ export default function AdminDashboard() {
       toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
       return;
     }
-    const newProd: AdminFishProduct = {
-      id: `ap-${Date.now()}`, name: productForm.name, batchId: productForm.batchId,
+    createProductMutation.mutate({
+      name: productForm.name, batchId: productForm.batchId,
       purchaseDate: productForm.purchaseDate || new Date().toISOString().split('T')[0],
       purchasedPerson: productForm.purchasedPerson, approverName: productForm.approverName,
       approverEmail: productForm.approverEmail, quantity: Number(productForm.quantity),
@@ -161,11 +157,13 @@ export default function AdminDashboard() {
       sellingUnit: productForm.sellingUnit, purchasePlace: productForm.purchasePlace,
       expectedProfit: Number(productForm.expectedProfit), expiryDate: productForm.expiryDate,
       isCatchOfTheDay: productForm.isCatchOfTheDay,
-    };
-    setAdminProducts(prev => [newProd, ...prev]);
-    setProductForm({ name: '', batchId: '', purchaseDate: '', purchasedPerson: '', approverName: '', approverEmail: '', quantity: '', purchaseRate: '', sellingRate: '', sellingUnit: 'kg', purchasePlace: '', expectedProfit: '', expiryDate: '', isCatchOfTheDay: false });
-    setProductModalOpen(false);
-    toast({ title: 'Product added successfully' });
+    } as Omit<AdminFishProduct, 'id'>, {
+      onSuccess: () => {
+        setProductForm({ name: '', batchId: '', purchaseDate: '', purchasedPerson: '', approverName: '', approverEmail: '', quantity: '', purchaseRate: '', sellingRate: '', sellingUnit: 'kg', purchasePlace: '', expectedProfit: '', expiryDate: '', isCatchOfTheDay: false });
+        setProductModalOpen(false);
+        toast({ title: 'Product added successfully' });
+      },
+    });
   };
 
   const handleSaveStore = () => {
@@ -173,17 +171,19 @@ export default function AdminDashboard() {
       toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
       return;
     }
-    const newStore: Store = {
-      id: `store-${Date.now()}`, sellerId: `seller-${Date.now()}`, name: storeForm.name,
+    createStoreMutation.mutate({
+      sellerId: `seller-${Date.now()}`, name: storeForm.name,
       description: storeForm.description, rating: 0, reviewCount: 0, deliveryRadius: 10,
       operatingHours: storeForm.operatingHours || '9:00 AM - 9:00 PM', isApproved: true, isActive: true,
       contactPerson: storeForm.contactPerson, phone: storeForm.phone, email: storeForm.email,
       address: storeForm.address, yearStarted: storeForm.yearStarted ? Number(storeForm.yearStarted) : undefined,
-    };
-    setStores(prev => [newStore, ...prev]);
-    setStoreForm({ name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '' });
-    setStoreModalOpen(false);
-    toast({ title: 'Store added successfully' });
+    } as Omit<Store, 'id'>, {
+      onSuccess: () => {
+        setStoreForm({ name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '' });
+        setStoreModalOpen(false);
+        toast({ title: 'Store added successfully' });
+      },
+    });
   };
 
   const handleSaveDish = () => {
@@ -191,30 +191,27 @@ export default function AdminDashboard() {
       toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
       return;
     }
-    const newDish: KitchenMenuItem = {
-      id: `km-${Date.now()}`,
-      name: dishForm.name,
-      description: dishForm.description,
-      image: dishForm.image,
-      price: Number(dishForm.price),
-      category: 'Mains',
-      isAvailable: true,
-      preparationTime: 20,
+    createDishMutation.mutate({
+      name: dishForm.name, description: dishForm.description, image: dishForm.image,
+      price: Number(dishForm.price), category: 'Mains', isAvailable: true, preparationTime: 20,
       tags: [
         ...(dishForm.isBestseller ? ['Bestseller'] : []),
         ...(dishForm.isRecommended ? ['Recommended'] : []),
       ],
-    };
-    setKitchenDishes(prev => [newDish, ...prev]);
-    setDishForm({ name: '', description: '', image: '', price: '', costPerUnit: '', isBestseller: false, isRecommended: false });
-    setDishModalOpen(false);
-    setKitchenTab('list');
-    toast({ title: 'Dish added successfully' });
+    } as Omit<KitchenMenuItem, 'id'>, {
+      onSuccess: () => {
+        setDishForm({ name: '', description: '', image: '', price: '', costPerUnit: '', isBestseller: false, isRecommended: false });
+        setDishModalOpen(false);
+        setKitchenTab('list');
+        toast({ title: 'Dish added successfully' });
+      },
+    });
   };
 
   const handleDeleteDish = (dishId: string) => {
-    setKitchenDishes(prev => prev.filter(d => d.id !== dishId));
-    toast({ title: 'Dish deleted' });
+    deleteDishMutation.mutate(dishId, {
+      onSuccess: () => toast({ title: 'Dish deleted' }),
+    });
   };
 
   // Filtered products
@@ -294,12 +291,11 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard label="Total Users" value="1,247" />
                 <StatCard label="Active Stores" value={String(stores.length)} />
-                <StatCard label="Products" value={String(mockUrbanFishProducts.length + mockKitchenMenu.length)} />
-                <StatCard label="Total Orders" value={String(orders.length)} />
+                <StatCard label="Products" value={loadingProducts ? '...' : String(adminProducts.length)} />
+                <StatCard label="Total Orders" value={loadingOrders ? '...' : String(orders.length)} />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Sales Chart */}
                 <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-5">
                   <h3 className="font-display text-sm font-bold mb-4 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-primary" />
@@ -317,7 +313,6 @@ export default function AdminDashboard() {
                   </ChartContainer>
                 </div>
 
-                {/* Revenue Summary */}
                 <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-5 flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-display text-sm font-bold">Revenue Summary</h3>
@@ -341,7 +336,7 @@ export default function AdminDashboard() {
                   <Accordion type="single" collapsible className="border-t border-border">
                     <AccordionItem value="expenses" className="border-none">
                       <AccordionTrigger className="py-3 text-sm font-display font-bold hover:no-underline">
-                        Expenses
+                        Expenses {loadingExpenses && '(loading...)'}
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
@@ -376,81 +371,88 @@ export default function AdminDashboard() {
           {/* ==================== ORDERS ==================== */}
           {activeTab === 'orders' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Tabs defaultValue="order_received" className="w-full">
-                <TabsList className="w-full justify-start mb-4 flex-wrap h-auto gap-1 bg-transparent p-0">
-                  {ORDER_STATUSES.map(s => (
-                    <TabsTrigger key={s} value={s}
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-xs font-display">
-                      {statusLabel[s]} ({orders.filter(o => o.status === s).length})
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                {ORDER_STATUSES.map(status => (
-                  <TabsContent key={status} value={status}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {orders.filter(o => o.status === status).map(order => (
-                        <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                          className="bg-card border border-border rounded-2xl p-5 space-y-3 hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between">
-                            <span className="font-display text-sm font-bold">{order.id}</span>
-                            <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${statusColor[order.status]}`}>
-                              {statusLabel[order.status]}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span className="font-body">{order.customerName}</span>
-                            <span className="text-muted-foreground text-xs">({order.customerEmail})</span>
-                          </div>
-                          <div className="bg-secondary/30 rounded-xl p-3 space-y-1.5">
-                            <p className="text-[10px] font-display uppercase text-muted-foreground tracking-wider">Items</p>
-                            {order.items.map((item, idx) => (
-                              <div key={idx} className="flex justify-between text-xs font-body">
-                                <span>{item.product.name} × {item.quantity}{item.weight ? ` (${item.weight}g)` : ''}</span>
-                                <span className="font-display font-semibold text-primary">
-                                  ₹{'pricePerKg' in item.product
-                                    ? (item.product as any).pricePerKg * item.quantity * ((item.weight || 1000) / 1000)
-                                    : (item.product as any).price * item.quantity}
-                                </span>
-                              </div>
-                            ))}
-                            {order.items.some(i => i.cuttingType) && (
-                              <p className="text-[10px] text-muted-foreground">Cut: {order.items.map(i => i.cuttingType).filter(Boolean).join(', ')}</p>
-                            )}
-                            {order.items.some(i => i.customerNote) && (
-                              <p className="text-[10px] text-muted-foreground italic">Note: {order.items.map(i => i.customerNote).filter(Boolean).join('; ')}</p>
-                            )}
-                          </div>
-                          <div className="text-xs font-body text-muted-foreground">
-                            <p className="text-[10px] font-display uppercase tracking-wider mb-1">Delivery</p>
-                            <p>{order.deliveryAddress.fullName}, {order.deliveryAddress.phone}</p>
-                            <p>{order.deliveryAddress.line1}, {order.deliveryAddress.city} - {order.deliveryAddress.pincode}</p>
-                          </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-border">
-                            <div>
-                              <span className="font-display text-lg font-bold text-primary">₹{order.total}</span>
-                              <span className="text-[10px] text-muted-foreground ml-2">
-                                {new Date(order.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+              {loadingOrders ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
+                </div>
+              ) : (
+                <Tabs defaultValue="order_received" className="w-full">
+                  <TabsList className="w-full justify-start mb-4 flex-wrap h-auto gap-1 bg-transparent p-0">
+                    {ORDER_STATUSES.map(s => (
+                      <TabsTrigger key={s} value={s}
+                        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-xs font-display">
+                        {statusLabel[s]} ({orders.filter(o => o.status === s).length})
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {ORDER_STATUSES.map(status => (
+                    <TabsContent key={status} value={status}>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {orders.filter(o => o.status === status).map(order => (
+                          <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                            className="bg-card border border-border rounded-2xl p-5 space-y-3 hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between">
+                              <span className="font-display text-sm font-bold">{order.id}</span>
+                              <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${statusColor[order.status]}`}>
+                                {statusLabel[order.status]}
                               </span>
                             </div>
-                            {nextStatus[status] ? (
-                              <button onClick={() => updateOrderStatus(order.id, nextStatus[status]!)}
-                                className="btn-cart text-[10px] py-1.5 px-4 rounded-lg">
-                                → {statusLabel[nextStatus[status]!]}
-                              </button>
-                            ) : (
-                              <span className="text-xs text-accent font-display font-semibold">✓ Delivered</span>
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
-                      {orders.filter(o => o.status === status).length === 0 && (
-                        <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No orders in this status</div>
-                      )}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="font-body">{order.customerName}</span>
+                              <span className="text-muted-foreground text-xs">({order.customerEmail})</span>
+                            </div>
+                            <div className="bg-secondary/30 rounded-xl p-3 space-y-1.5">
+                              <p className="text-[10px] font-display uppercase text-muted-foreground tracking-wider">Items</p>
+                              {order.items.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-xs font-body">
+                                  <span>{item.product.name} × {item.quantity}{item.weight ? ` (${item.weight}g)` : ''}</span>
+                                  <span className="font-display font-semibold text-primary">
+                                    ₹{'pricePerKg' in item.product
+                                      ? (item.product as any).pricePerKg * item.quantity * ((item.weight || 1000) / 1000)
+                                      : (item.product as any).price * item.quantity}
+                                  </span>
+                                </div>
+                              ))}
+                              {order.items.some(i => i.cuttingType) && (
+                                <p className="text-[10px] text-muted-foreground">Cut: {order.items.map(i => i.cuttingType).filter(Boolean).join(', ')}</p>
+                              )}
+                              {order.items.some(i => i.customerNote) && (
+                                <p className="text-[10px] text-muted-foreground italic">Note: {order.items.map(i => i.customerNote).filter(Boolean).join('; ')}</p>
+                              )}
+                            </div>
+                            <div className="text-xs font-body text-muted-foreground">
+                              <p className="text-[10px] font-display uppercase tracking-wider mb-1">Delivery</p>
+                              <p>{order.deliveryAddress.fullName}, {order.deliveryAddress.phone}</p>
+                              <p>{order.deliveryAddress.line1}, {order.deliveryAddress.city} - {order.deliveryAddress.pincode}</p>
+                            </div>
+                            <div className="flex items-center justify-between pt-2 border-t border-border">
+                              <div>
+                                <span className="font-display text-lg font-bold text-primary">₹{order.total}</span>
+                                <span className="text-[10px] text-muted-foreground ml-2">
+                                  {new Date(order.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                </span>
+                              </div>
+                              {nextStatus[status] ? (
+                                <button onClick={() => updateOrderStatus(order.id, nextStatus[status]!)}
+                                  className="btn-cart text-[10px] py-1.5 px-4 rounded-lg"
+                                  disabled={updateOrderStatusMutation.isPending}>
+                                  → {statusLabel[nextStatus[status]!]}
+                                </button>
+                              ) : (
+                                <span className="text-xs text-accent font-display font-semibold">✓ Delivered</span>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                        {orders.filter(o => o.status === status).length === 0 && (
+                          <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No orders in this status</div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              )}
             </motion.div>
           )}
 
@@ -502,32 +504,38 @@ export default function AdminDashboard() {
               </div>
 
               {/* Product Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <AnimatePresence>
-                  {filteredProducts.map(p => (
-                    <motion.div key={p.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                      className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-shadow relative">
-                      {p.isCatchOfTheDay && (
-                        <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-display font-bold px-2.5 py-1 rounded-full">
-                          🐟 Catch of the Day
-                        </span>
-                      )}
-                      <h3 className="font-display text-base font-bold mb-3">{p.name}</h3>
-                      <div className="space-y-1.5 text-sm font-body">
-                        <div className="flex justify-between"><span className="text-muted-foreground">Batch ID</span><span className="font-medium">{p.batchId}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{p.quantity} {p.sellingUnit === 'kg' ? 'Kg' : 'pcs'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Purchase Rate</span><span className="font-medium">₹{p.purchaseRate}/{p.sellingUnit === 'kg' ? 'kg' : 'pc'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Selling Rate</span><span className="font-medium text-primary font-display font-bold">₹{p.sellingRate}/{p.sellingUnit === 'kg' ? 'kg' : 'pc'}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Expiry Date</span><span className="font-medium">{new Date(p.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
-                        <div className="flex justify-between"><span className="text-muted-foreground">Purchase Place</span><span className="font-medium">{p.purchasePlace}</span></div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {filteredProducts.length === 0 && (
-                  <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No products match filters</div>
-                )}
-              </div>
+              {loadingProducts ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <AnimatePresence>
+                    {filteredProducts.map(p => (
+                      <motion.div key={p.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-shadow relative">
+                        {p.isCatchOfTheDay && (
+                          <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-display font-bold px-2.5 py-1 rounded-full">
+                            🐟 Catch of the Day
+                          </span>
+                        )}
+                        <h3 className="font-display text-base font-bold mb-3">{p.name}</h3>
+                        <div className="space-y-1.5 text-sm font-body">
+                          <div className="flex justify-between"><span className="text-muted-foreground">Batch ID</span><span className="font-medium">{p.batchId}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{p.quantity} {p.sellingUnit === 'kg' ? 'Kg' : 'pcs'}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Purchase Rate</span><span className="font-medium">₹{p.purchaseRate}/{p.sellingUnit === 'kg' ? 'kg' : 'pc'}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Selling Rate</span><span className="font-medium text-primary font-display font-bold">₹{p.sellingRate}/{p.sellingUnit === 'kg' ? 'kg' : 'pc'}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Expiry Date</span><span className="font-medium">{new Date(p.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Purchase Place</span><span className="font-medium">{p.purchasePlace}</span></div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  {filteredProducts.length === 0 && (
+                    <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No products match filters</div>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -543,53 +551,60 @@ export default function AdminDashboard() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <AnimatePresence>
-                  {kitchenDishes.map(dish => (
-                    <motion.div key={dish.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                      className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
-                      {dish.image ? (
-                        <img src={dish.image} alt={dish.name} className="w-full h-40 object-cover" />
-                      ) : (
-                        <div className="w-full h-40 bg-secondary/30 flex items-center justify-center">
-                          <UtensilsCrossed className="w-10 h-10 text-muted-foreground/40" />
-                        </div>
-                      )}
-                      <div className="p-4 space-y-2">
-                        <div className="flex items-start justify-between">
-                          <h3 className="font-display text-base font-bold">{dish.name}</h3>
-                          <div className="flex gap-1.5 flex-shrink-0 ml-2">
-                            {dish.tags.includes('Bestseller') && (
-                              <span className="bg-primary text-primary-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Bestseller</span>
-                            )}
-                            {dish.tags.includes('Recommended') && (
-                              <span className="bg-accent text-accent-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Recommended</span>
-                            )}
+              {loadingDishes ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 rounded-2xl" />)}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <AnimatePresence>
+                    {kitchenDishes.map(dish => (
+                      <motion.div key={dish.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                        {dish.image ? (
+                          <img src={dish.image} alt={dish.name} className="w-full h-40 object-cover" />
+                        ) : (
+                          <div className="w-full h-40 bg-secondary/30 flex items-center justify-center">
+                            <UtensilsCrossed className="w-10 h-10 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        <div className="p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <h3 className="font-display text-base font-bold">{dish.name}</h3>
+                            <div className="flex gap-1.5 flex-shrink-0 ml-2">
+                              {dish.tags.includes('Bestseller') && (
+                                <span className="bg-primary text-primary-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Bestseller</span>
+                              )}
+                              {dish.tags.includes('Recommended') && (
+                                <span className="bg-accent text-accent-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Recommended</span>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-body line-clamp-2">{dish.description}</p>
+                          <div className="flex items-center justify-between pt-1">
+                            <div>
+                              <span className="font-display text-sm font-bold text-primary">₹{dish.price}</span>
+                              {dish.calories && <span className="text-[10px] text-muted-foreground ml-2">{dish.calories} cal</span>}
+                            </div>
+                            <div className="flex gap-1">
+                              <button className="p-1.5 rounded-lg hover:bg-secondary transition-colors" title="Edit">
+                                <Edit className="w-3.5 h-3.5 text-muted-foreground" />
+                              </button>
+                              <button onClick={() => handleDeleteDish(dish.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors" title="Delete"
+                                disabled={deleteDishMutation.isPending}>
+                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                        <p className="text-xs text-muted-foreground font-body line-clamp-2">{dish.description}</p>
-                        <div className="flex items-center justify-between pt-1">
-                          <div>
-                            <span className="font-display text-sm font-bold text-primary">₹{dish.price}</span>
-                            {dish.calories && <span className="text-[10px] text-muted-foreground ml-2">{dish.calories} cal</span>}
-                          </div>
-                          <div className="flex gap-1">
-                            <button className="p-1.5 rounded-lg hover:bg-secondary transition-colors" title="Edit">
-                              <Edit className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button onClick={() => handleDeleteDish(dish.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors" title="Delete">
-                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {kitchenDishes.length === 0 && (
-                  <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No dishes added yet</div>
-                )}
-              </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  {kitchenDishes.length === 0 && (
+                    <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No dishes added yet</div>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -603,39 +618,45 @@ export default function AdminDashboard() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {stores.map(store => (
-                  <motion.div key={store.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-shadow">
-                    <div className="flex items-start gap-4 mb-3">
-                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="font-display text-xl font-bold text-primary">{store.name.charAt(0)}</span>
+              {loadingStores ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {stores.map(store => (
+                    <motion.div key={store.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                      className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-4 mb-3">
+                        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <span className="font-display text-xl font-bold text-primary">{store.name.charAt(0)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-display text-base font-bold truncate">{store.name}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-2 font-body mt-0.5">{store.description}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-display text-base font-bold truncate">{store.name}</h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2 font-body mt-0.5">{store.description}</p>
+                      <div className="space-y-1.5 text-sm font-body">
+                        {store.contactPerson && <div className="flex justify-between"><span className="text-muted-foreground">Contact</span><span className="font-medium">{store.contactPerson}</span></div>}
+                        {store.phone && <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span className="font-medium">{store.phone}</span></div>}
+                        {store.email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span className="font-medium truncate max-w-[160px]">{store.email}</span></div>}
+                        {store.address && <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span className="font-medium truncate max-w-[160px]">{store.address}</span></div>}
+                        <div className="flex justify-between"><span className="text-muted-foreground">Hours</span><span className="font-medium">{store.operatingHours}</span></div>
+                        {store.yearStarted && <div className="flex justify-between"><span className="text-muted-foreground">Since</span><span className="font-medium">{store.yearStarted}</span></div>}
+                        <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">{store.rating} ({store.reviewCount})</span></div>
                       </div>
-                    </div>
-                    <div className="space-y-1.5 text-sm font-body">
-                      {store.contactPerson && <div className="flex justify-between"><span className="text-muted-foreground">Contact</span><span className="font-medium">{store.contactPerson}</span></div>}
-                      {store.phone && <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span className="font-medium">{store.phone}</span></div>}
-                      {store.email && <div className="flex justify-between"><span className="text-muted-foreground">Email</span><span className="font-medium truncate max-w-[160px]">{store.email}</span></div>}
-                      {store.address && <div className="flex justify-between"><span className="text-muted-foreground">Address</span><span className="font-medium truncate max-w-[160px]">{store.address}</span></div>}
-                      <div className="flex justify-between"><span className="text-muted-foreground">Hours</span><span className="font-medium">{store.operatingHours}</span></div>
-                      {store.yearStarted && <div className="flex justify-between"><span className="text-muted-foreground">Since</span><span className="font-medium">{store.yearStarted}</span></div>}
-                      <div className="flex justify-between"><span className="text-muted-foreground">Rating</span><span className="font-medium">{store.rating} ({store.reviewCount})</span></div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-border flex gap-2">
-                      <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${store.isApproved ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'}`}>
-                        {store.isApproved ? 'Approved' : 'Pending'}
-                      </span>
-                      <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${store.isActive ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>
-                        {store.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                      <div className="mt-3 pt-3 border-t border-border flex gap-2">
+                        <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${store.isApproved ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'}`}>
+                          {store.isApproved ? 'Approved' : 'Pending'}
+                        </span>
+                        <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${store.isActive ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'}`}>
+                          {store.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -674,7 +695,9 @@ export default function AdminDashboard() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setExpenseModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveExpense}>Save</Button>
+            <Button onClick={handleSaveExpense} disabled={createExpenseMutation.isPending}>
+              {createExpenseMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -715,7 +738,9 @@ export default function AdminDashboard() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setProductModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveProduct}>Save</Button>
+            <Button onClick={handleSaveProduct} disabled={createProductMutation.isPending}>
+              {createProductMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -742,7 +767,9 @@ export default function AdminDashboard() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setStoreModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveStore}>Save</Button>
+            <Button onClick={handleSaveStore} disabled={createStoreMutation.isPending}>
+              {createStoreMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -774,7 +801,9 @@ export default function AdminDashboard() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDishModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveDish}>Save</Button>
+            <Button onClick={handleSaveDish} disabled={createDishMutation.isPending}>
+              {createDishMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
