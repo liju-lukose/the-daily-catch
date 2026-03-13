@@ -533,20 +533,64 @@ export default function AdminDashboard() {
 
           {/* ==================== KITCHEN ==================== */}
           {activeTab === 'kitchen' && (
-            <div>
-              <button className="btn-cart text-sm mb-4 rounded-lg">+ Add Menu Item</button>
-              <div className="space-y-2">
-                {mockKitchenMenu.map(item => (
-                  <div key={item.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                      <span className="font-display text-sm font-semibold">{item.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{item.category}</span>
-                    </div>
-                    <span className="font-display text-sm font-bold text-primary">₹{item.price}</span>
-                  </div>
-                ))}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Button variant={kitchenTab === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setKitchenTab('list')}>
+                  List Dishes
+                </Button>
+                <Button variant={kitchenTab === 'add' ? 'default' : 'outline'} size="sm" onClick={() => { setKitchenTab('add'); setDishModalOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-1" /> Add Dish
+                </Button>
               </div>
-            </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AnimatePresence>
+                  {kitchenDishes.map(dish => (
+                    <motion.div key={dish.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                      className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                      {dish.image ? (
+                        <img src={dish.image} alt={dish.name} className="w-full h-40 object-cover" />
+                      ) : (
+                        <div className="w-full h-40 bg-secondary/30 flex items-center justify-center">
+                          <UtensilsCrossed className="w-10 h-10 text-muted-foreground/40" />
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-display text-base font-bold">{dish.name}</h3>
+                          <div className="flex gap-1.5 flex-shrink-0 ml-2">
+                            {dish.tags.includes('Bestseller') && (
+                              <span className="bg-primary text-primary-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Bestseller</span>
+                            )}
+                            {dish.tags.includes('Recommended') && (
+                              <span className="bg-accent text-accent-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Recommended</span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-body line-clamp-2">{dish.description}</p>
+                        <div className="flex items-center justify-between pt-1">
+                          <div>
+                            <span className="font-display text-sm font-bold text-primary">₹{dish.price}</span>
+                            {dish.calories && <span className="text-[10px] text-muted-foreground ml-2">{dish.calories} cal</span>}
+                          </div>
+                          <div className="flex gap-1">
+                            <button className="p-1.5 rounded-lg hover:bg-secondary transition-colors" title="Edit">
+                              <Edit className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button onClick={() => handleDeleteDish(dish.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors" title="Delete">
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {kitchenDishes.length === 0 && (
+                  <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No dishes added yet</div>
+                )}
+              </div>
+            </motion.div>
           )}
 
           {/* ==================== STORES ==================== */}
