@@ -169,7 +169,39 @@ export default function AdminDashboard() {
   };
 
   const handleSaveStore = () => {
-    if (!storeForm.name || !storeForm.contactPerson) {
+    // ... existing store save logic
+  };
+
+  const handleSaveDish = () => {
+    if (!dishForm.name || !dishForm.price) {
+      toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
+      return;
+    }
+    const newDish: KitchenMenuItem = {
+      id: `km-${Date.now()}`,
+      name: dishForm.name,
+      description: dishForm.description,
+      image: dishForm.image,
+      price: Number(dishForm.price),
+      category: 'Mains',
+      isAvailable: true,
+      preparationTime: 20,
+      tags: [
+        ...(dishForm.isBestseller ? ['Bestseller'] : []),
+        ...(dishForm.isRecommended ? ['Recommended'] : []),
+      ],
+    };
+    setKitchenDishes(prev => [newDish, ...prev]);
+    setDishForm({ name: '', description: '', image: '', price: '', costPerUnit: '', isBestseller: false, isRecommended: false });
+    setDishModalOpen(false);
+    setKitchenTab('list');
+    toast({ title: 'Dish added successfully' });
+  };
+
+  const handleDeleteDish = (dishId: string) => {
+    setKitchenDishes(prev => prev.filter(d => d.id !== dishId));
+    toast({ title: 'Dish deleted' });
+  };
       toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
       return;
     }
