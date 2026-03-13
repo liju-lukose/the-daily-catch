@@ -22,6 +22,40 @@ export interface Store {
   operatingHours: string;
   isApproved: boolean;
   isActive: boolean;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  profilePhoto?: string;
+  yearStarted?: number;
+}
+
+export interface Expense {
+  id: string;
+  name: string;
+  description: string;
+  amount: number;
+  date: string;
+  approverName: string;
+  approverEmail: string;
+}
+
+export interface AdminFishProduct {
+  id: string;
+  name: string;
+  batchId: string;
+  purchaseDate: string;
+  purchasedPerson: string;
+  approverName: string;
+  approverEmail: string;
+  quantity: number;
+  purchaseRate: number;
+  sellingRate: number;
+  sellingUnit: 'count' | 'kg';
+  purchasePlace: string;
+  expectedProfit: number;
+  expiryDate: string;
+  isCatchOfTheDay: boolean;
 }
 
 export interface CuttingType {
