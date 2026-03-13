@@ -118,13 +118,8 @@ export default function AdminDashboard() {
     name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '',
   });
 
-  if (!user || user.role !== 'admin') {
-    navigate('/login');
-    return null;
-  }
-
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
   const totalRevenue = revenueBreakdown.cloudKitchen + revenueBreakdown.fishMarket + revenueBreakdown.store;
