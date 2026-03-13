@@ -259,55 +259,78 @@ export default function AdminDashboard() {
 
                 {ORDER_STATUSES.map(status => (
                   <TabsContent key={status} value={status}>
-                    <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-border bg-secondary/50">
-                              <th className="text-left px-4 py-3 font-display text-xs uppercase text-muted-foreground">Order ID</th>
-                              <th className="text-left px-4 py-3 font-display text-xs uppercase text-muted-foreground">Customer</th>
-                              <th className="text-left px-4 py-3 font-display text-xs uppercase text-muted-foreground hidden md:table-cell">Items</th>
-                              <th className="text-left px-4 py-3 font-display text-xs uppercase text-muted-foreground">Total</th>
-                              <th className="text-left px-4 py-3 font-display text-xs uppercase text-muted-foreground hidden sm:table-cell">Time</th>
-                              <th className="text-left px-4 py-3 font-display text-xs uppercase text-muted-foreground">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {orders.filter(o => o.status === status).map(order => (
-                              <tr key={order.id} className="border-b border-border last:border-none hover:bg-secondary/30 transition-colors">
-                                <td className="px-4 py-3 font-display font-semibold text-xs">{order.id}</td>
-                                <td className="px-4 py-3 font-body text-xs">{order.customerName}</td>
-                                <td className="px-4 py-3 font-body text-xs text-muted-foreground hidden md:table-cell">
-                                  {order.items.map(i => i.product.name).join(', ')}
-                                </td>
-                                <td className="px-4 py-3 font-display font-bold text-xs text-primary">₹{order.total}</td>
-                                <td className="px-4 py-3 font-body text-xs text-muted-foreground hidden sm:table-cell">
-                                  {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </td>
-                                <td className="px-4 py-3">
-                                  {nextStatus[status] ? (
-                                    <button
-                                      onClick={() => updateOrderStatus(order.id, nextStatus[status]!)}
-                                      className="btn-cart text-[10px] py-1.5 px-3 rounded-lg"
-                                    >
-                                      → {statusLabel[nextStatus[status]!]}
-                                    </button>
-                                  ) : (
-                                    <span className="text-xs text-accent font-display font-medium">✓ Done</span>
-                                  )}
-                                </td>
-                              </tr>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {orders.filter(o => o.status === status).map(order => (
+                        <motion.div
+                          key={order.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-card border border-border rounded-2xl p-5 space-y-3 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-display text-sm font-bold">{order.id}</span>
+                            <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${statusColor[order.status]}`}>
+                              {statusLabel[order.status]}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm">
+                            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="font-body">{order.customerName}</span>
+                            <span className="text-muted-foreground text-xs">({order.customerEmail})</span>
+                          </div>
+
+                          <div className="bg-secondary/30 rounded-xl p-3 space-y-1.5">
+                            <p className="text-[10px] font-display uppercase text-muted-foreground tracking-wider">Items</p>
+                            {order.items.map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-xs font-body">
+                                <span>{item.product.name} × {item.quantity}{item.weight ? ` (${item.weight}g)` : ''}</span>
+                                <span className="font-display font-semibold text-primary">
+                                  ₹{'pricePerKg' in item.product
+                                    ? (item.product as any).pricePerKg * item.quantity * ((item.weight || 1000) / 1000)
+                                    : (item.product as any).price * item.quantity}
+                                </span>
+                              </div>
                             ))}
-                            {orders.filter(o => o.status === status).length === 0 && (
-                              <tr>
-                                <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground font-body">
-                                  No orders in this status
-                                </td>
-                              </tr>
+                            {order.items.some(i => i.cuttingType) && (
+                              <p className="text-[10px] text-muted-foreground">Cut: {order.items.map(i => i.cuttingType).filter(Boolean).join(', ')}</p>
                             )}
-                          </tbody>
-                        </table>
-                      </div>
+                            {order.items.some(i => i.customerNote) && (
+                              <p className="text-[10px] text-muted-foreground italic">Note: {order.items.map(i => i.customerNote).filter(Boolean).join('; ')}</p>
+                            )}
+                          </div>
+
+                          <div className="text-xs font-body text-muted-foreground">
+                            <p className="text-[10px] font-display uppercase tracking-wider mb-1">Delivery</p>
+                            <p>{order.deliveryAddress.fullName}, {order.deliveryAddress.phone}</p>
+                            <p>{order.deliveryAddress.line1}, {order.deliveryAddress.city} - {order.deliveryAddress.pincode}</p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-border">
+                            <div>
+                              <span className="font-display text-lg font-bold text-primary">₹{order.total}</span>
+                              <span className="text-[10px] text-muted-foreground ml-2">
+                                {new Date(order.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                              </span>
+                            </div>
+                            {nextStatus[status] ? (
+                              <button
+                                onClick={() => updateOrderStatus(order.id, nextStatus[status]!)}
+                                className="btn-cart text-[10px] py-1.5 px-4 rounded-lg"
+                              >
+                                → {statusLabel[nextStatus[status]!]}
+                              </button>
+                            ) : (
+                              <span className="text-xs text-accent font-display font-semibold">✓ Delivered</span>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                      {orders.filter(o => o.status === status).length === 0 && (
+                        <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">
+                          No orders in this status
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 ))}
