@@ -119,6 +119,9 @@ export default function AdminDashboard() {
   const [storeForm, setStoreForm] = useState({
     name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '',
   });
+  const [dishForm, setDishForm] = useState({
+    name: '', description: '', image: '', price: '', costPerUnit: '', isBestseller: false, isRecommended: false,
+  });
 
   const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
