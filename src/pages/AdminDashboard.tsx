@@ -747,6 +747,37 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Add Dish Modal */}
+      <Dialog open={dishModalOpen} onOpenChange={setDishModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Add Dish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div><Label className="text-xs">Dish Image URL</Label><Input value={dishForm.image} onChange={e => setDishForm(f => ({ ...f, image: e.target.value }))} placeholder="https://example.com/image.jpg" /></div>
+            <div><Label className="text-xs">Dish Name *</Label><Input value={dishForm.name} onChange={e => setDishForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Grilled Salmon Bowl" /></div>
+            <div><Label className="text-xs">Description</Label><Input value={dishForm.description} onChange={e => setDishForm(f => ({ ...f, description: e.target.value }))} placeholder="Short description" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">Rate (₹) *</Label><Input type="number" value={dishForm.price} onChange={e => setDishForm(f => ({ ...f, price: e.target.value }))} placeholder="0" /></div>
+              <div><Label className="text-xs">Cost Per Unit (₹)</Label><Input type="number" value={dishForm.costPerUnit} onChange={e => setDishForm(f => ({ ...f, costPerUnit: e.target.value }))} placeholder="0" /></div>
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Switch checked={dishForm.isBestseller} onCheckedChange={v => setDishForm(f => ({ ...f, isBestseller: v }))} />
+                <Label className="text-xs">Bestseller</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={dishForm.isRecommended} onCheckedChange={v => setDishForm(f => ({ ...f, isRecommended: v }))} />
+                <Label className="text-xs">Recommended</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDishModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveDish}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
