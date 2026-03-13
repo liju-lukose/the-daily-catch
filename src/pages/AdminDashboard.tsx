@@ -666,7 +666,7 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      <Footer />
+
     </div>
   );
 }
