@@ -195,6 +195,11 @@ export default function AdminDashboard() {
     });
   }, [adminProducts, productSearch, filterBatchId, filterPurchaseDate, filterExpiryDate, filterCotd, filterPurchasePlace, filterSellingUnit]);
 
+  if (!user || user.role !== 'admin') {
+    navigate('/login');
+    return null;
+  }
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
