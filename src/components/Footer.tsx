@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Footer() {
+  const { user } = useAuth();
+
+  if (user?.role === 'admin') return null;
+
   return (
     <footer className="bg-deep-water text-salt-white mt-auto">
       <div className="container mx-auto px-4 py-12">

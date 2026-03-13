@@ -2,12 +2,11 @@ import { useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { mockUrbanFishProducts, mockKitchenMenu, mockStores as initialMockStores, mockOrders } from '@/lib/mock-data';
-import { Order, Expense, AdminFishProduct, Store } from '@/lib/types';
+import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem } from '@/lib/types';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import {
   LayoutDashboard, Users, Package, UtensilsCrossed, Store as StoreIcon, ShoppingBag, TrendingUp, Settings, LogOut,
-  Plus, X, Search, Filter, Calendar
+  Plus, X, Search, Filter, Calendar, Edit, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -91,11 +90,14 @@ export default function AdminDashboard() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [adminProducts, setAdminProducts] = useState<AdminFishProduct[]>(initialAdminProducts);
   const [stores, setStores] = useState<Store[]>(initialMockStores);
+  const [kitchenDishes, setKitchenDishes] = useState<KitchenMenuItem[]>([...mockKitchenMenu]);
+  const [kitchenTab, setKitchenTab] = useState<'list' | 'add'>('list');
 
   // Modal states
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [storeModalOpen, setStoreModalOpen] = useState(false);
+  const [dishModalOpen, setDishModalOpen] = useState(false);
   const [storesView, setStoresView] = useState<'list' | 'add'>('list');
 
   // Filter states for Urban Fish
@@ -116,6 +118,9 @@ export default function AdminDashboard() {
   });
   const [storeForm, setStoreForm] = useState({
     name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '',
+  });
+  const [dishForm, setDishForm] = useState({
+    name: '', description: '', image: '', price: '', costPerUnit: '', isBestseller: false, isRecommended: false,
   });
 
   const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
@@ -179,6 +184,37 @@ export default function AdminDashboard() {
     setStoreForm({ name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '' });
     setStoreModalOpen(false);
     toast({ title: 'Store added successfully' });
+  };
+
+  const handleSaveDish = () => {
+    if (!dishForm.name || !dishForm.price) {
+      toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
+      return;
+    }
+    const newDish: KitchenMenuItem = {
+      id: `km-${Date.now()}`,
+      name: dishForm.name,
+      description: dishForm.description,
+      image: dishForm.image,
+      price: Number(dishForm.price),
+      category: 'Mains',
+      isAvailable: true,
+      preparationTime: 20,
+      tags: [
+        ...(dishForm.isBestseller ? ['Bestseller'] : []),
+        ...(dishForm.isRecommended ? ['Recommended'] : []),
+      ],
+    };
+    setKitchenDishes(prev => [newDish, ...prev]);
+    setDishForm({ name: '', description: '', image: '', price: '', costPerUnit: '', isBestseller: false, isRecommended: false });
+    setDishModalOpen(false);
+    setKitchenTab('list');
+    toast({ title: 'Dish added successfully' });
+  };
+
+  const handleDeleteDish = (dishId: string) => {
+    setKitchenDishes(prev => prev.filter(d => d.id !== dishId));
+    toast({ title: 'Dish deleted' });
   };
 
   // Filtered products
@@ -497,20 +533,64 @@ export default function AdminDashboard() {
 
           {/* ==================== KITCHEN ==================== */}
           {activeTab === 'kitchen' && (
-            <div>
-              <button className="btn-cart text-sm mb-4 rounded-lg">+ Add Menu Item</button>
-              <div className="space-y-2">
-                {mockKitchenMenu.map(item => (
-                  <div key={item.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                      <span className="font-display text-sm font-semibold">{item.name}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{item.category}</span>
-                    </div>
-                    <span className="font-display text-sm font-bold text-primary">₹{item.price}</span>
-                  </div>
-                ))}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Button variant={kitchenTab === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setKitchenTab('list')}>
+                  List Dishes
+                </Button>
+                <Button variant={kitchenTab === 'add' ? 'default' : 'outline'} size="sm" onClick={() => { setKitchenTab('add'); setDishModalOpen(true); }}>
+                  <Plus className="w-4 h-4 mr-1" /> Add Dish
+                </Button>
               </div>
-            </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AnimatePresence>
+                  {kitchenDishes.map(dish => (
+                    <motion.div key={dish.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                      className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                      {dish.image ? (
+                        <img src={dish.image} alt={dish.name} className="w-full h-40 object-cover" />
+                      ) : (
+                        <div className="w-full h-40 bg-secondary/30 flex items-center justify-center">
+                          <UtensilsCrossed className="w-10 h-10 text-muted-foreground/40" />
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-display text-base font-bold">{dish.name}</h3>
+                          <div className="flex gap-1.5 flex-shrink-0 ml-2">
+                            {dish.tags.includes('Bestseller') && (
+                              <span className="bg-primary text-primary-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Bestseller</span>
+                            )}
+                            {dish.tags.includes('Recommended') && (
+                              <span className="bg-accent text-accent-foreground text-[10px] font-display font-bold px-2 py-0.5 rounded-full">Recommended</span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-body line-clamp-2">{dish.description}</p>
+                        <div className="flex items-center justify-between pt-1">
+                          <div>
+                            <span className="font-display text-sm font-bold text-primary">₹{dish.price}</span>
+                            {dish.calories && <span className="text-[10px] text-muted-foreground ml-2">{dish.calories} cal</span>}
+                          </div>
+                          <div className="flex gap-1">
+                            <button className="p-1.5 rounded-lg hover:bg-secondary transition-colors" title="Edit">
+                              <Edit className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button onClick={() => handleDeleteDish(dish.id)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors" title="Delete">
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {kitchenDishes.length === 0 && (
+                  <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No dishes added yet</div>
+                )}
+              </div>
+            </motion.div>
           )}
 
           {/* ==================== STORES ==================== */}
@@ -667,7 +747,38 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      <Footer />
+      {/* Add Dish Modal */}
+      <Dialog open={dishModalOpen} onOpenChange={setDishModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Add Dish</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div><Label className="text-xs">Dish Image URL</Label><Input value={dishForm.image} onChange={e => setDishForm(f => ({ ...f, image: e.target.value }))} placeholder="https://example.com/image.jpg" /></div>
+            <div><Label className="text-xs">Dish Name *</Label><Input value={dishForm.name} onChange={e => setDishForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Grilled Salmon Bowl" /></div>
+            <div><Label className="text-xs">Description</Label><Input value={dishForm.description} onChange={e => setDishForm(f => ({ ...f, description: e.target.value }))} placeholder="Short description" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">Rate (₹) *</Label><Input type="number" value={dishForm.price} onChange={e => setDishForm(f => ({ ...f, price: e.target.value }))} placeholder="0" /></div>
+              <div><Label className="text-xs">Cost Per Unit (₹)</Label><Input type="number" value={dishForm.costPerUnit} onChange={e => setDishForm(f => ({ ...f, costPerUnit: e.target.value }))} placeholder="0" /></div>
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Switch checked={dishForm.isBestseller} onCheckedChange={v => setDishForm(f => ({ ...f, isBestseller: v }))} />
+                <Label className="text-xs">Bestseller</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={dishForm.isRecommended} onCheckedChange={v => setDishForm(f => ({ ...f, isRecommended: v }))} />
+                <Label className="text-xs">Recommended</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDishModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveDish}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
