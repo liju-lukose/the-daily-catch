@@ -169,7 +169,21 @@ export default function AdminDashboard() {
   };
 
   const handleSaveStore = () => {
-    // ... existing store save logic
+    if (!storeForm.name || !storeForm.contactPerson) {
+      toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
+      return;
+    }
+    const newStore: Store = {
+      id: `store-${Date.now()}`, sellerId: `seller-${Date.now()}`, name: storeForm.name,
+      description: storeForm.description, rating: 0, reviewCount: 0, deliveryRadius: 10,
+      operatingHours: storeForm.operatingHours || '9:00 AM - 9:00 PM', isApproved: true, isActive: true,
+      contactPerson: storeForm.contactPerson, phone: storeForm.phone, email: storeForm.email,
+      address: storeForm.address, yearStarted: storeForm.yearStarted ? Number(storeForm.yearStarted) : undefined,
+    };
+    setStores(prev => [newStore, ...prev]);
+    setStoreForm({ name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '' });
+    setStoreModalOpen(false);
+    toast({ title: 'Store added successfully' });
   };
 
   const handleSaveDish = () => {
@@ -201,21 +215,6 @@ export default function AdminDashboard() {
   const handleDeleteDish = (dishId: string) => {
     setKitchenDishes(prev => prev.filter(d => d.id !== dishId));
     toast({ title: 'Dish deleted' });
-  };
-      toast({ title: 'Error', description: 'Please fill required fields', variant: 'destructive' });
-      return;
-    }
-    const newStore: Store = {
-      id: `store-${Date.now()}`, sellerId: `seller-${Date.now()}`, name: storeForm.name,
-      description: storeForm.description, rating: 0, reviewCount: 0, deliveryRadius: 10,
-      operatingHours: storeForm.operatingHours || '9:00 AM - 9:00 PM', isApproved: true, isActive: true,
-      contactPerson: storeForm.contactPerson, phone: storeForm.phone, email: storeForm.email,
-      address: storeForm.address, yearStarted: storeForm.yearStarted ? Number(storeForm.yearStarted) : undefined,
-    };
-    setStores(prev => [newStore, ...prev]);
-    setStoreForm({ name: '', contactPerson: '', phone: '', email: '', address: '', description: '', operatingHours: '', yearStarted: '' });
-    setStoreModalOpen(false);
-    toast({ title: 'Store added successfully' });
   };
 
   // Filtered products
