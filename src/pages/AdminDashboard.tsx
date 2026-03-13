@@ -90,11 +90,14 @@ export default function AdminDashboard() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [adminProducts, setAdminProducts] = useState<AdminFishProduct[]>(initialAdminProducts);
   const [stores, setStores] = useState<Store[]>(initialMockStores);
+  const [kitchenDishes, setKitchenDishes] = useState<KitchenMenuItem[]>([...mockKitchenMenu]);
+  const [kitchenTab, setKitchenTab] = useState<'list' | 'add'>('list');
 
   // Modal states
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [storeModalOpen, setStoreModalOpen] = useState(false);
+  const [dishModalOpen, setDishModalOpen] = useState(false);
   const [storesView, setStoresView] = useState<'list' | 'add'>('list');
 
   // Filter states for Urban Fish
