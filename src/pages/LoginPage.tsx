@@ -30,12 +30,8 @@ export default function LoginPage() {
         setError(result.error || 'Login failed');
         return;
       }
-      // We need to check what role was returned — but login already sets user
-      // Redirect based on role after a tick
       setTimeout(() => {
-        // re-read from the auth state isn't possible here, so use hardcoded check
-        if (email === 'admin@test.com') navigate(returnTo || '/admin');
-        else if (email === 'seller@test.com') navigate(returnTo || '/seller');
+        if (email === 'seller@test.com') navigate(returnTo || '/seller');
         else navigate(returnTo || '/');
       }, 0);
     }
