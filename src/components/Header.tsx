@@ -15,6 +15,7 @@ export default function Header() {
     { label: 'Cloud Kitchen', href: '/cloud-kitchen' },
     { label: 'Stores', href: '/stores' },
     { label: 'Catch of the Day', href: '/#catch-of-the-day' },
+    ...(isAuthenticated && user?.role === 'admin' ? [{ label: 'Admin', href: '/admin' }] : []),
   ];
 
   const isActive = (href: string) => location.pathname === href;
