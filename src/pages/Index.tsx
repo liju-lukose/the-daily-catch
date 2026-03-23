@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HeroBanner from '@/components/HeroBanner';
 import CatchOfTheDay from '@/components/CatchOfTheDay';
+import PreOrderGrid from '@/components/PreOrderGrid';
 import UrbanFishGrid from '@/components/UrbanFishGrid';
 import CloudKitchenGrid from '@/components/CloudKitchenGrid';
 import StoreList from '@/components/StoreList';
@@ -22,7 +23,8 @@ const Index = () => {
       <main className="flex-1">
         <HeroBanner />
         {loadingCatch ? <LoadingSkeleton /> : <CatchOfTheDay products={catchProducts ?? []} />}
-        {loadingFish ? <LoadingSkeleton /> : <UrbanFishGrid products={fishProducts ?? []} />}
+        {loadingFish ? <LoadingSkeleton /> : <PreOrderGrid products={fishProducts ?? []} />}
+        {loadingFish ? <LoadingSkeleton /> : <UrbanFishGrid products={(fishProducts ?? []).filter(p => !p.isPreOrder)} />}
         {loadingKitchen ? <LoadingSkeleton /> : <CloudKitchenGrid items={kitchenMenu ?? []} />}
         {loadingStores ? <LoadingSkeleton /> : <StoreList stores={stores ?? []} />}
       </main>

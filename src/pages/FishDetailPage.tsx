@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Brain, Shield, Dumbbell, Eye, Bone, Minus, Plus, ShoppingCart, ChevronLeft, UtensilsCrossed, Scissors, MessageSquare } from 'lucide-react';
+import { Heart, Brain, Shield, Dumbbell, Eye, Bone, Minus, Plus, ShoppingCart, ChevronLeft, UtensilsCrossed, Scissors, MessageSquare, CalendarClock } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useFishDetail } from '@/hooks/useApi';
@@ -93,11 +93,24 @@ export default function FishDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
               <img src={getProductImage(product.id)} alt={product.name} className="w-full h-full object-cover" />
-              {product.freshnessTags.length > 0 && (
-                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                  {product.freshnessTags.map(tag => (
-                    <span key={tag} className={tag.includes('Fresh') ? 'tag-urgent' : 'tag-fresh'}>{tag}</span>
-                  ))}
+              <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                {product.isPreOrder ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium font-display bg-accent text-accent-foreground rounded-sm">
+                    <CalendarClock className="w-3.5 h-3.5" />
+                    Pre-Order
+                  </span>
+                ) : product.isCatchOfTheDay ? (
+                  <span className="tag-urgent">Fresh Catch</span>
+                ) : null}
+                {product.freshnessTags.filter(t => !t.includes('Fresh') && t !== 'Pre-Order').map(tag => (
+                  <span key={tag} className="tag-fresh">{tag}</span>
+                ))}
+              </div>
+              {!product.isPreOrder && product.isCatchOfTheDay && (
+                <div className="absolute bottom-4 right-4">
+                  <span className="bg-destructive text-destructive-foreground text-xs font-display px-2.5 py-1 rounded-sm">
+                    Only {product.stock} Kg left
+                  </span>
                 </div>
               )}
             </motion.div>
@@ -138,7 +151,11 @@ export default function FishDetailPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground mt-4 font-body">{product.stock} units available</p>
+              {product.isPreOrder ? (
+                <p className="text-xs text-accent font-body mt-4">🚚 Pre-order — fresh fish delivered tomorrow based on your order</p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-4 font-body">{product.stock} units available</p>
+              )}
 
               <button onClick={handleAddToCart} className="btn-cart mt-6 flex items-center justify-center gap-2 text-base py-3.5 w-full md:w-auto md:px-12 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
                 <ShoppingCart className="w-5 h-5" />
@@ -169,10 +186,10 @@ export default function FishDetailPage() {
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-12">
             <div className="flex items-center gap-2 mb-4">
               <MessageSquare className="w-5 h-5 text-primary" />
-              <h2 className="section-title text-xl">Delivery Instructions</h2>
+              <h2 className="section-title text-xl">Add Note for Cleaning / Delivery</h2>
             </div>
             <Textarea value={deliveryInstructions} onChange={e => setDeliveryInstructions(e.target.value)}
-              placeholder="Add any delivery instructions (optional) — e.g., call before delivery, leave at door, etc."
+              placeholder="Add note for cleaning / delivery (optional) — e.g., extra cleaning, remove head, specific cuts, etc."
               className="max-w-xl bg-card border-border rounded-lg resize-none" rows={3} />
           </motion.section>
 

@@ -70,15 +70,16 @@ export default function CatchOfTheDay({ products }: Props) {
                   />
                   <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300" />
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                    {product.freshnessTags.map(tag => (
-                      <span key={tag} className={tag.includes('Fresh') ? 'tag-urgent' : 'tag-fresh'}>
+                    <span className="tag-urgent">Fresh Catch</span>
+                    {product.freshnessTags.filter(t => !t.includes('Fresh')).map(tag => (
+                      <span key={tag} className="tag-fresh">
                         {tag}
                       </span>
                     ))}
                   </div>
                   <div className="absolute bottom-3 right-3">
-                    <span className="bg-foreground/70 text-background text-xs font-display px-2 py-1 rounded-sm backdrop-blur-sm">
-                      {product.stock} left
+                    <span className="bg-destructive text-destructive-foreground text-xs font-display px-2 py-1 rounded-sm backdrop-blur-sm">
+                      Only {product.stock} Kg left
                     </span>
                   </div>
                 </div>

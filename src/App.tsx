@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
+import { PincodeProvider } from "@/lib/pincode-context";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import UrbanFishPage from "./pages/UrbanFishPage";
@@ -24,29 +25,31 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/urban-fish" element={<UrbanFishPage />} />
-              <Route path="/fish/:fishId" element={<FishDetailPage />} />
-              <Route path="/cloud-kitchen" element={<CloudKitchenPage />} />
-              <Route path="/stores" element={<StoresPage />} />
-              <Route path="/stores/:storeId" element={<StoreDetailPage />} />
-              <Route path="/cart" element={<CartPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/account" element={<AccountPage />} />
-              <Route path="/seller" element={<SellerDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
+      <PincodeProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/urban-fish" element={<UrbanFishPage />} />
+                <Route path="/fish/:fishId" element={<FishDetailPage />} />
+                <Route path="/cloud-kitchen" element={<CloudKitchenPage />} />
+                <Route path="/stores" element={<StoresPage />} />
+                <Route path="/stores/:storeId" element={<StoreDetailPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/seller" element={<SellerDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </PincodeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

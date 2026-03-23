@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CartItem, FishProduct, KitchenMenuItem } from './types';
+import { CartItem, FishProduct, KitchenMenuItem, DeliverySlot, PaymentType } from './types';
 
 interface CartContextType {
   items: CartItem[];
@@ -9,12 +9,19 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  deliverySlot: DeliverySlot | null;
+  setDeliverySlot: (slot: DeliverySlot) => void;
+  paymentType: PaymentType;
+  setPaymentType: (type: PaymentType) => void;
+  hasPreOrderItems: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [deliverySlot, setDeliverySlot] = useState<DeliverySlot | null>(null);
+  const [paymentType, setPaymentType] = useState<PaymentType>('full');
 
   const addItem = useCallback((product: FishProduct | KitchenMenuItem, options?: { weight?: number; storeId?: string; cuttingType?: string; deliveryInstructions?: string; customerNote?: string; quantity?: number }) => {
     const qty = options?.quantity ?? 1;
@@ -51,7 +58,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setDeliverySlot(null);
+    setPaymentType('full');
+  }, []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = items.reduce((sum, i) => {
@@ -61,8 +72,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return sum + price * i.quantity;
   }, 0);
 
+  const hasPreOrderItems = items.some(i => 'isPreOrder' in i.product && (i.product as FishProduct).isPreOrder);
+
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, deliverySlot, setDeliverySlot, paymentType, setPaymentType, hasPreOrderItems }}>
       {children}
     </CartContext.Provider>
   );

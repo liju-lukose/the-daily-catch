@@ -76,6 +76,7 @@ export interface FishProduct {
   weightOptions: number[];
   stock: number;
   isCatchOfTheDay: boolean;
+  isPreOrder: boolean;
   freshnessTags: string[];
   origin?: string;
   isUrbanFish: boolean;
@@ -95,6 +96,9 @@ export interface KitchenMenuItem {
   tags: string[];
 }
 
+export type DeliverySlot = 'morning' | 'evening';
+export type PaymentType = 'full' | 'partial';
+
 export interface CartItem {
   product: FishProduct | KitchenMenuItem;
   quantity: number;
@@ -103,6 +107,16 @@ export interface CartItem {
   cuttingType?: string;
   deliveryInstructions?: string;
   customerNote?: string;
+}
+
+export interface OrderConfirmation {
+  orderId: string;
+  items: CartItem[];
+  total: number;
+  deliverySlot: DeliverySlot;
+  paymentType: PaymentType;
+  address: Address;
+  createdAt: string;
 }
 
 export interface Order {
