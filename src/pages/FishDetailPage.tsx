@@ -186,10 +186,10 @@ export default function FishDetailPage() {
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-12">
             <div className="flex items-center gap-2 mb-4">
               <MessageSquare className="w-5 h-5 text-primary" />
-              <h2 className="section-title text-xl">Delivery Instructions</h2>
+              <h2 className="section-title text-xl">Add Note for Cleaning / Delivery</h2>
             </div>
             <Textarea value={deliveryInstructions} onChange={e => setDeliveryInstructions(e.target.value)}
-              placeholder="Add any delivery instructions (optional) — e.g., call before delivery, leave at door, etc."
+              placeholder="Add note for cleaning / delivery (optional) — e.g., extra cleaning, remove head, specific cuts, etc."
               className="max-w-xl bg-card border-border rounded-lg resize-none" rows={3} />
           </motion.section>
 
