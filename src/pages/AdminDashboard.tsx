@@ -6,7 +6,7 @@ import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem } from '@/lib/
 import Header from '@/components/Header';
 import {
   LayoutDashboard, Users, Package, UtensilsCrossed, Store as StoreIcon, ShoppingBag, TrendingUp, Settings, LogOut,
-  Plus, X, Search, Filter, Calendar, Edit, Trash2
+  Plus, X, Search, Filter, Calendar, Edit, Trash2, ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
