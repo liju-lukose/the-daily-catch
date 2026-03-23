@@ -76,6 +76,7 @@ export interface FishProduct {
   weightOptions: number[];
   stock: number;
   isCatchOfTheDay: boolean;
+  isPreOrder: boolean;
   freshnessTags: string[];
   origin?: string;
   isUrbanFish: boolean;
