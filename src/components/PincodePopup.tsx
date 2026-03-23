@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, X } from 'lucide-react';
+import { usePincode } from '@/lib/pincode-context';
 
 export default function PincodePopup() {
-  const [open, setOpen] = useState(true);
+  const { isAvailable, setPincodeData } = usePincode();
+  const [open, setOpen] = useState(!isAvailable);
   const [pincode, setPincode] = useState('');
   const [checked, setChecked] = useState(false);
 
@@ -12,7 +14,8 @@ export default function PincodePopup() {
   const handleCheck = () => {
     if (pincode.length >= 5) {
       setChecked(true);
-      setTimeout(() => setOpen(false), 2000);
+      setPincodeData(pincode);
+      setTimeout(() => setOpen(false), 1800);
     }
   };
 
@@ -53,6 +56,7 @@ export default function PincodePopup() {
                   className="input-field rounded-lg text-center text-lg font-display tracking-widest"
                   maxLength={6}
                   autoFocus
+                  onKeyDown={e => e.key === 'Enter' && handleCheck()}
                 />
                 <button
                   onClick={handleCheck}
@@ -67,7 +71,8 @@ export default function PincodePopup() {
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🎉</span>
                 </div>
-                <p className="font-display text-sm font-semibold text-accent">Great news! We are available at your location.</p>
+                <p className="font-display text-sm font-semibold text-accent">We are available in your area!</p>
+                <p className="text-xs text-muted-foreground font-body mt-1">Pincode: {pincode}</p>
               </motion.div>
             )}
           </motion.div>
