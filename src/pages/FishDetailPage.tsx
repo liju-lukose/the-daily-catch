@@ -93,11 +93,24 @@ export default function FishDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="relative aspect-square rounded-xl overflow-hidden bg-secondary">
               <img src={getProductImage(product.id)} alt={product.name} className="w-full h-full object-cover" />
-              {product.freshnessTags.length > 0 && (
-                <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                  {product.freshnessTags.map(tag => (
-                    <span key={tag} className={tag.includes('Fresh') ? 'tag-urgent' : 'tag-fresh'}>{tag}</span>
-                  ))}
+              <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                {product.isPreOrder ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium font-display bg-accent text-accent-foreground rounded-sm">
+                    <CalendarClock className="w-3.5 h-3.5" />
+                    Pre-Order
+                  </span>
+                ) : product.isCatchOfTheDay ? (
+                  <span className="tag-urgent">Fresh Catch</span>
+                ) : null}
+                {product.freshnessTags.filter(t => !t.includes('Fresh') && t !== 'Pre-Order').map(tag => (
+                  <span key={tag} className="tag-fresh">{tag}</span>
+                ))}
+              </div>
+              {!product.isPreOrder && product.isCatchOfTheDay && (
+                <div className="absolute bottom-4 right-4">
+                  <span className="bg-destructive text-destructive-foreground text-xs font-display px-2.5 py-1 rounded-sm">
+                    Only {product.stock} Kg left
+                  </span>
                 </div>
               )}
             </motion.div>
