@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Brain, Shield, Dumbbell, Eye, Bone, Minus, Plus, ShoppingCart, ChevronLeft, UtensilsCrossed, Scissors, MessageSquare } from 'lucide-react';
+import { Heart, Brain, Shield, Dumbbell, Eye, Bone, Minus, Plus, ShoppingCart, ChevronLeft, UtensilsCrossed, Scissors, MessageSquare, CalendarClock } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useFishDetail } from '@/hooks/useApi';
