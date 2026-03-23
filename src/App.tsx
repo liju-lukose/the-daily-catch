@@ -18,6 +18,7 @@ import LoginPage from "./pages/LoginPage";
 import AccountPage from "./pages/AccountPage";
 import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProcurementDashboard from "./pages/ProcurementDashboard";
 import FishDetailPage from "./pages/FishDetailPage";
 
 const queryClient = new QueryClient();
