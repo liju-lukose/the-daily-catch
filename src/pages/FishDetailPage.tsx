@@ -151,7 +151,11 @@ export default function FishDetailPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground mt-4 font-body">{product.stock} units available</p>
+              {product.isPreOrder ? (
+                <p className="text-xs text-accent font-body mt-4">🚚 Pre-order — fresh fish delivered tomorrow based on your order</p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-4 font-body">{product.stock} units available</p>
+              )}
 
               <button onClick={handleAddToCart} className="btn-cart mt-6 flex items-center justify-center gap-2 text-base py-3.5 w-full md:w-auto md:px-12 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
                 <ShoppingCart className="w-5 h-5" />
