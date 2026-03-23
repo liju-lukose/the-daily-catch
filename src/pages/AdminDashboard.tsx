@@ -236,6 +236,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'procurement', label: 'Procurement', icon: ClipboardList, route: '/admin/procurement' },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'urban-fish', label: 'Urban Fish', icon: Package },
     { id: 'kitchen', label: 'Cloud Kitchen', icon: UtensilsCrossed },
