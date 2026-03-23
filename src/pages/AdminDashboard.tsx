@@ -272,7 +272,7 @@ export default function AdminDashboard() {
         <div className="md:hidden w-full border-b border-border bg-card overflow-x-auto">
           <div className="flex p-2 gap-1">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => (tab as any).route ? navigate((tab as any).route) : setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-display font-medium rounded-lg whitespace-nowrap transition-colors ${activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'}`}>
                 <tab.icon className="w-3 h-3" />{tab.label}
               </button>
