@@ -255,7 +255,7 @@ export default function AdminDashboard() {
           </div>
           <nav className="flex-1 p-3 space-y-1">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => (tab as any).route ? navigate((tab as any).route) : setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-display font-medium rounded-lg transition-colors ${activeTab === tab.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent/50'}`}>
                 <tab.icon className="w-3.5 h-3.5" />{tab.label}
               </button>
