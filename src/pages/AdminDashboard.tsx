@@ -6,7 +6,7 @@ import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem } from '@/lib/
 import Header from '@/components/Header';
 import {
   LayoutDashboard, Users, Package, UtensilsCrossed, Store as StoreIcon, ShoppingBag, TrendingUp, Settings, LogOut,
-  Plus, X, Search, Filter, Calendar, Edit, Trash2
+  Plus, X, Search, Filter, Calendar, Edit, Trash2, ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -236,6 +236,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'procurement', label: 'Procurement', icon: ClipboardList, route: '/admin/procurement' },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'urban-fish', label: 'Urban Fish', icon: Package },
     { id: 'kitchen', label: 'Cloud Kitchen', icon: UtensilsCrossed },
@@ -254,7 +255,7 @@ export default function AdminDashboard() {
           </div>
           <nav className="flex-1 p-3 space-y-1">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => (tab as any).route ? navigate((tab as any).route) : setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-display font-medium rounded-lg transition-colors ${activeTab === tab.id ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent/50'}`}>
                 <tab.icon className="w-3.5 h-3.5" />{tab.label}
               </button>
@@ -271,7 +272,7 @@ export default function AdminDashboard() {
         <div className="md:hidden w-full border-b border-border bg-card overflow-x-auto">
           <div className="flex p-2 gap-1">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => (tab as any).route ? navigate((tab as any).route) : setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-display font-medium rounded-lg whitespace-nowrap transition-colors ${activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'}`}>
                 <tab.icon className="w-3 h-3" />{tab.label}
               </button>
