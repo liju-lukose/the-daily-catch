@@ -22,4 +22,10 @@ export const orderApi = {
     const { data } = await apiClient.put(`/orders/${id}/status`, { status });
     return data;
   },
+
+  async convertPreOrder(id: string): Promise<Order> {
+    if (USE_MOCK) return orderMock.convertPreOrder(id);
+    const { data } = await apiClient.put(`/orders/${id}/convert`);
+    return data;
+  },
 };

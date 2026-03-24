@@ -98,6 +98,11 @@ export const orderMock = {
     _orders = _orders.map(o => o.id === id ? { ...o, status } : o);
     return _orders.find(o => o.id === id)!;
   },
+  async convertPreOrder(id: string): Promise<Order> {
+    await delay();
+    _orders = _orders.map(o => o.id === id ? { ...o, status: 'order_received' as const, isPreOrder: false, convertedFromPreOrder: true } : o);
+    return _orders.find(o => o.id === id)!;
+  },
 };
 
 // ── Admin Product mock responses ──
