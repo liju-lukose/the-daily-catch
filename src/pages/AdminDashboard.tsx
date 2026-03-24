@@ -29,6 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const ORDER_STATUSES: Order['status'][] = ['order_received', 'preparing', 'out_for_delivery', 'delivered'];
 
 const statusLabel: Record<Order['status'], string> = {
+  pre_order: 'Pre-Order',
   order_received: 'Order Received',
   preparing: 'Preparing',
   out_for_delivery: 'Out for Delivery',
@@ -37,6 +38,7 @@ const statusLabel: Record<Order['status'], string> = {
 };
 
 const statusColor: Record<Order['status'], string> = {
+  pre_order: 'bg-violet-100 text-violet-700',
   order_received: 'bg-primary/10 text-primary',
   preparing: 'bg-yellow-100 text-yellow-700',
   out_for_delivery: 'bg-blue-100 text-blue-700',
