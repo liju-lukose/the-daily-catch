@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { useOrders, useUpdateOrderStatus, useExpenses, useCreateExpense, useAdminProducts, useCreateProduct, useStores, useCreateStore, useDishes, useCreateDish, useDeleteDish } from '@/hooks/useApi';
-import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem } from '@/lib/types';
+import { useOrders, useUpdateOrderStatus, useConvertPreOrder, useExpenses, useCreateExpense, useAdminProducts, useCreateProduct, useStores, useCreateStore, useDishes, useCreateDish, useDeleteDish } from '@/hooks/useApi';
+import { Order, Expense, AdminFishProduct, Store, KitchenMenuItem, FishProduct } from '@/lib/types';
 import Header from '@/components/Header';
 import {
   LayoutDashboard, Users, Package, UtensilsCrossed, Store as StoreIcon, ShoppingBag, TrendingUp, Settings, LogOut,
@@ -29,6 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const ORDER_STATUSES: Order['status'][] = ['order_received', 'preparing', 'out_for_delivery', 'delivered'];
 
 const statusLabel: Record<Order['status'], string> = {
+  pre_order: 'Pre-Order',
   order_received: 'Order Received',
   preparing: 'Preparing',
   out_for_delivery: 'Out for Delivery',
@@ -37,6 +38,7 @@ const statusLabel: Record<Order['status'], string> = {
 };
 
 const statusColor: Record<Order['status'], string> = {
+  pre_order: 'bg-violet-100 text-violet-700',
   order_received: 'bg-primary/10 text-primary',
   preparing: 'bg-yellow-100 text-yellow-700',
   out_for_delivery: 'bg-blue-100 text-blue-700',
@@ -81,11 +83,16 @@ export default function AdminDashboard() {
   const { data: kitchenDishes = [], isLoading: loadingDishes } = useDishes();
 
   const updateOrderStatusMutation = useUpdateOrderStatus();
+  const convertPreOrderMutation = useConvertPreOrder();
   const createExpenseMutation = useCreateExpense();
   const createProductMutation = useCreateProduct();
   const createStoreMutation = useCreateStore();
   const createDishMutation = useCreateDish();
   const deleteDishMutation = useDeleteDish();
+
+  // Convert pre-order dialog
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [convertingOrderId, setConvertingOrderId] = useState<string | null>(null);
 
   // Modal states
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
@@ -377,8 +384,12 @@ export default function AdminDashboard() {
                   {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}
                 </div>
               ) : (
-                <Tabs defaultValue="order_received" className="w-full">
+                <Tabs defaultValue="pre_order" className="w-full">
                   <TabsList className="w-full justify-start mb-4 flex-wrap h-auto gap-1 bg-transparent p-0">
+                    <TabsTrigger value="pre_order"
+                      className="data-[state=active]:bg-violet-600 data-[state=active]:text-white rounded-lg text-xs font-display">
+                      Pre-Orders ({orders.filter(o => o.status === 'pre_order').length})
+                    </TabsTrigger>
                     {ORDER_STATUSES.map(s => (
                       <TabsTrigger key={s} value={s}
                         className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg text-xs font-display">
@@ -386,17 +397,88 @@ export default function AdminDashboard() {
                       </TabsTrigger>
                     ))}
                   </TabsList>
+
+                  {/* Pre-Orders Tab */}
+                  <TabsContent value="pre_order">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {orders.filter(o => o.status === 'pre_order').map(order => (
+                        <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                          className="bg-card border-2 border-violet-200 rounded-2xl p-5 space-y-3 hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between">
+                            <span className="font-display text-sm font-bold">{order.id}</span>
+                            <span className="text-[10px] font-display font-semibold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">
+                              ⏳ Awaiting Procurement
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="font-body">{order.customerName}</span>
+                          </div>
+                          <div className="bg-violet-50 rounded-xl p-3 space-y-1.5">
+                            <p className="text-[10px] font-display uppercase text-muted-foreground tracking-wider">Pre-Order Items</p>
+                            {order.items.map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-xs font-body">
+                                <div>
+                                  <span className="font-medium">{item.product.name}</span>
+                                  <span className="text-muted-foreground"> × {item.quantity}</span>
+                                  {item.weight && <span className="text-muted-foreground"> ({item.weight >= 1000 ? `${item.weight/1000}kg` : `${item.weight}g`})</span>}
+                                  {item.cuttingType && <span className="text-violet-600 ml-1">• {item.cuttingType}</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs font-body">
+                            <div className="bg-secondary/30 rounded-lg p-2">
+                              <p className="text-[10px] font-display uppercase text-muted-foreground">Delivery Slot</p>
+                              <p className="font-semibold">{order.deliverySlot === 'morning' ? '🌅 8 AM – 12 PM' : '🌇 2 PM – 7 PM'}</p>
+                            </div>
+                            <div className="bg-secondary/30 rounded-lg p-2">
+                              <p className="text-[10px] font-display uppercase text-muted-foreground">Payment</p>
+                              <p className="font-semibold">{order.paymentType === 'full' ? '💳 Full' : '💰 Partial (₹100)'}</p>
+                            </div>
+                          </div>
+                          <div className="text-xs font-body text-muted-foreground">
+                            <p>{order.deliveryAddress.fullName}, {order.deliveryAddress.line1}, {order.deliveryAddress.city} - {order.deliveryAddress.pincode}</p>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-border">
+                            <div>
+                              <span className="font-display text-lg font-bold text-primary">₹{order.total}</span>
+                              <span className="text-[10px] text-muted-foreground ml-2">
+                                {new Date(order.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                              </span>
+                            </div>
+                            <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white text-[10px] gap-1"
+                              onClick={() => { setConvertingOrderId(order.id); setConvertDialogOpen(true); }}>
+                              ✓ Confirm Availability
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ))}
+                      {orders.filter(o => o.status === 'pre_order').length === 0 && (
+                        <div className="col-span-full text-center py-12 text-sm text-muted-foreground font-body">No pre-orders pending</div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  {/* Regular status tabs */}
                   {ORDER_STATUSES.map(status => (
                     <TabsContent key={status} value={status}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {orders.filter(o => o.status === status).map(order => (
                           <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                             className="bg-card border border-border rounded-2xl p-5 space-y-3 hover:shadow-md transition-shadow">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between gap-2">
                               <span className="font-display text-sm font-bold">{order.id}</span>
-                              <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${statusColor[order.status]}`}>
-                                {statusLabel[order.status]}
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {order.convertedFromPreOrder && (
+                                  <span className="text-[10px] font-display font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                                    From Pre-Order
+                                  </span>
+                                )}
+                                <span className={`text-[10px] font-display font-semibold px-2.5 py-1 rounded-full ${statusColor[order.status]}`}>
+                                  {statusLabel[order.status]}
+                                </span>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                               <Users className="w-3.5 h-3.5 text-muted-foreground" />
@@ -454,6 +536,39 @@ export default function AdminDashboard() {
                   ))}
                 </Tabs>
               )}
+
+              {/* Convert Pre-Order Dialog */}
+              <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="font-display">Confirm Availability</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm font-body text-muted-foreground">
+                    Fish is available. Convert this Pre-Order into a normal order?
+                  </p>
+                  <p className="text-xs text-muted-foreground font-body">
+                    The order will be moved to "Order Received" and follow the standard delivery flow.
+                  </p>
+                  <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={() => setConvertDialogOpen(false)}>Cancel</Button>
+                    <Button className="bg-violet-600 hover:bg-violet-700 text-white"
+                      disabled={convertPreOrderMutation.isPending}
+                      onClick={() => {
+                        if (convertingOrderId) {
+                          convertPreOrderMutation.mutate(convertingOrderId, {
+                            onSuccess: () => {
+                              toast({ title: 'Pre-Order Converted', description: 'Order moved to "Order Received"' });
+                              setConvertDialogOpen(false);
+                              setConvertingOrderId(null);
+                            },
+                          });
+                        }
+                      }}>
+                      Confirm
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </motion.div>
           )}
 

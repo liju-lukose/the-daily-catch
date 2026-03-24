@@ -60,6 +60,14 @@ export const useUpdateOrderStatus = () => {
   });
 };
 
+export const useConvertPreOrder = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => orderApi.convertPreOrder(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
+  });
+};
+
 // ── Admin Product Hooks ──
 export const useAdminProducts = () =>
   useQuery({ queryKey: ['adminProducts'], queryFn: productApi.getAll });
