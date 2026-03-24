@@ -83,11 +83,16 @@ export default function AdminDashboard() {
   const { data: kitchenDishes = [], isLoading: loadingDishes } = useDishes();
 
   const updateOrderStatusMutation = useUpdateOrderStatus();
+  const convertPreOrderMutation = useConvertPreOrder();
   const createExpenseMutation = useCreateExpense();
   const createProductMutation = useCreateProduct();
   const createStoreMutation = useCreateStore();
   const createDishMutation = useCreateDish();
   const deleteDishMutation = useDeleteDish();
+
+  // Convert pre-order dialog
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [convertingOrderId, setConvertingOrderId] = useState<string | null>(null);
 
   // Modal states
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
