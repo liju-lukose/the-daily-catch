@@ -126,10 +126,14 @@ export interface Order {
   customerEmail: string;
   items: CartItem[];
   total: number;
-  status: 'order_received' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  status: 'pre_order' | 'order_received' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
   deliveryAddress: Address;
   createdAt: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
+  isPreOrder?: boolean;
+  convertedFromPreOrder?: boolean;
+  deliverySlot?: DeliverySlot;
+  paymentType?: PaymentType;
 }
 
 export interface Address {
