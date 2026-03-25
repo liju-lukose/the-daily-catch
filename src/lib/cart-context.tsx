@@ -9,6 +9,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  totalCuttingCharges: number;
   deliverySlot: DeliverySlot | null;
   setDeliverySlot: (slot: DeliverySlot) => void;
   paymentType: PaymentType;
@@ -79,7 +80,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const hasPreOrderItems = items.some(i => 'isPreOrder' in i.product && (i.product as FishProduct).isPreOrder);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, deliverySlot, setDeliverySlot, paymentType, setPaymentType, hasPreOrderItems }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, totalCuttingCharges, deliverySlot, setDeliverySlot, paymentType, setPaymentType, hasPreOrderItems }}>
       {children}
     </CartContext.Provider>
   );
