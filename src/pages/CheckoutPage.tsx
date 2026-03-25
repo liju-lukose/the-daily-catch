@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FishProduct } from '@/lib/types';
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart, deliverySlot, paymentType, hasPreOrderItems } = useCart();
+  const { items, totalPrice, totalCuttingCharges, clearCart, deliverySlot, paymentType, hasPreOrderItems } = useCart();
   const { isAuthenticated, user } = useAuth();
   const { pincode: savedPincode } = usePincode();
   const navigate = useNavigate();
@@ -134,13 +134,20 @@ export default function CheckoutPage() {
                       <h3 className="font-display text-sm font-semibold">Order Summary</h3>
                       {items.map(item => {
                         const isFish = 'pricePerKg' in item.product;
-                        const price = isFish
+                        const basePrice = isFish
                           ? ((item.product as FishProduct).pricePerKg * (item.weight || 1000) / 1000)
                           : (item.product as any).price;
+                        const cuttingCharge = item.cuttingPrice ?? 0;
+                        const itemTotal = (basePrice * item.quantity) + cuttingCharge;
                         return (
                           <div key={item.product.id} className="flex justify-between text-sm font-body">
-                            <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
-                            <span className="font-semibold">₹{(price * item.quantity).toFixed(0)}</span>
+                            <div>
+                              <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
+                              {item.cuttingType && cuttingCharge > 0 && (
+                                <span className="text-xs text-primary ml-1">(+₹{cuttingCharge} cutting)</span>
+                              )}
+                            </div>
+                            <span className="font-semibold">₹{itemTotal.toFixed(0)}</span>
                           </div>
                         );
                       })}
