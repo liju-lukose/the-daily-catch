@@ -68,13 +68,16 @@ export default function FishDetailPage() {
   const dishes = fishDishSuggestions[product.id] ?? defaultDishSuggestions;
   const unitPrice = product.pricePerKg * (weight / 1000);
   const cuttingTypes = product.cuttingTypes ?? [];
+  const selectedCuttingObj = cuttingTypes.find(c => c.id === cutting);
+  const cuttingPrice = selectedCuttingObj?.price ?? 0;
 
   const handleAddToCart = () => {
-    const cuttingName = cuttingTypes.find(c => c.id === cutting)?.name;
+    const cuttingName = selectedCuttingObj?.name;
     addItem(product, {
       weight,
       storeId: product.storeId,
       cuttingType: cuttingName,
+      cuttingPrice: cuttingPrice,
       deliveryInstructions: deliveryInstructions || undefined,
       quantity,
     });
@@ -159,7 +162,7 @@ export default function FishDetailPage() {
 
               <button onClick={handleAddToCart} className="btn-cart mt-6 flex items-center justify-center gap-2 text-base py-3.5 w-full md:w-auto md:px-12 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
                 <ShoppingCart className="w-5 h-5" />
-                Add to Cart — ₹{(unitPrice * quantity).toFixed(0)}
+                Add to Cart — ₹{((unitPrice * quantity) + cuttingPrice).toFixed(0)}
               </button>
             </motion.div>
           </div>
@@ -172,12 +175,13 @@ export default function FishDetailPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {cuttingTypes.map(ct => (
-                  <button key={ct.id} onClick={() => setSelectedCutting(ct.id)}
-                    className={`bg-card border-2 rounded-xl p-4 text-left transition-all hover:shadow-md ${cutting === ct.id ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground/40'}`}>
-                    <span className="text-3xl block mb-2">{ct.image}</span>
-                    <span className="font-display text-sm font-semibold block">{ct.name}</span>
-                    {ct.description && <span className="text-xs text-muted-foreground font-body mt-1 block">{ct.description}</span>}
-                  </button>
+                    <button key={ct.id} onClick={() => setSelectedCutting(ct.id)}
+                      className={`bg-card border-2 rounded-xl p-4 text-left transition-all hover:shadow-md ${cutting === ct.id ? 'border-primary shadow-md ring-2 ring-primary/20' : 'border-border hover:border-muted-foreground/40'}`}>
+                      <span className="text-3xl block mb-2">{ct.image}</span>
+                      <span className="font-display text-sm font-semibold block">{ct.name}</span>
+                      <span className="text-xs font-display font-bold text-primary block mt-1">+₹{ct.price}</span>
+                      {ct.description && <span className="text-xs text-muted-foreground font-body mt-1 block">{ct.description}</span>}
+                    </button>
                 ))}
               </div>
             </motion.section>

@@ -63,6 +63,7 @@ export interface CuttingType {
   name: string;
   image: string;
   description?: string;
+  price: number;
 }
 
 export interface FishProduct {
@@ -105,6 +106,7 @@ export interface CartItem {
   weight?: number;
   storeId?: string;
   cuttingType?: string;
+  cuttingPrice?: number;
   deliveryInstructions?: string;
   customerNote?: string;
 }

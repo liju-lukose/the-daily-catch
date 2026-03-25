@@ -3,7 +3,7 @@ import Footer from '@/components/Footer';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { getProductImage } from '@/lib/images';
-import { Minus, Plus, Trash2, Clock, CalendarClock, Zap, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, Trash2, Clock, CalendarClock, Zap, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FishProduct, KitchenMenuItem, DeliverySlot } from '@/lib/types';
 import { motion } from 'framer-motion';
@@ -22,21 +22,23 @@ function getItemType(product: FishProduct | KitchenMenuItem): CartItemType {
 }
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalPrice, clearCart, deliverySlot, setDeliverySlot, paymentType, setPaymentType, hasPreOrderItems } = useCart();
+  const { items, removeItem, updateQuantity, totalPrice, totalCuttingCharges, clearCart, deliverySlot, setDeliverySlot, paymentType, setPaymentType, hasPreOrderItems } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Determine cart composition
   const itemTypes = new Set(items.map(i => getItemType(i.product)));
   const hasPreOrder = itemTypes.has('preorder');
   const hasNonPreOrder = itemTypes.has('fresh') || itemTypes.has('kitchen');
   const isMixedCart = hasPreOrder && hasNonPreOrder;
   const isKitchenOnly = itemTypes.size === 1 && itemTypes.has('kitchen');
-  const showDeliverySlots = hasPreOrder && !hasNonPreOrder;
+
+  // Show delivery slots for pre-order or mixed carts
+  const showDeliverySlots = hasPreOrder;
   const showEstimatedDelivery = isKitchenOnly;
 
+  const baseTotal = totalPrice - totalCuttingCharges;
+
   const handleProceed = () => {
-    if (isMixedCart) return;
     if (showDeliverySlots && !deliverySlot) return;
     if (!isAuthenticated) {
       navigate('/login', { state: { returnTo: '/checkout' } });
@@ -61,18 +63,21 @@ export default function CartPage() {
             </div>
           ) : (
             <>
-              {/* Mixed Cart Warning */}
+              {/* Mixed Cart Info */}
               {isMixedCart && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-4 flex items-start gap-3"
+                  className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4 flex items-start gap-3"
                 >
-                  <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-display text-sm font-semibold text-destructive">Cannot mix order types</p>
-                    <p className="text-xs text-destructive/80 font-body mt-1">
-                      Pre-Order items and Instant Delivery items cannot be ordered together. Please place separate orders.
+                    <p className="font-display text-sm font-semibold text-foreground">Scheduled Delivery</p>
+                    <p className="text-xs text-muted-foreground font-body mt-1">
+                      Your cart contains both Pre-Order and Instant Delivery items. All items will be delivered together in the selected time slot.
+                    </p>
+                    <p className="text-xs text-primary font-body mt-1">
+                      For faster delivery of Instant items, please place a separate order.
                     </p>
                   </div>
                 </motion.div>
@@ -84,16 +89,18 @@ export default function CartPage() {
                   const isPreOrder = isFish && (item.product as FishProduct).isPreOrder;
                   const isKitchen = !isFish;
                   const isFreshCatch = isFish && (item.product as FishProduct).isCatchOfTheDay && !isPreOrder;
-                  const price = isFish
+                  const basePrice = isFish
                     ? ((item.product as FishProduct).pricePerKg * (item.weight || 1000) / 1000)
                     : (item.product as KitchenMenuItem).price;
+                  const cuttingCharge = item.cuttingPrice ?? 0;
+                  const itemTotal = (basePrice * item.quantity) + cuttingCharge;
 
                   return (
                     <motion.div
                       key={item.product.id + (item.cuttingType || '')}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-card border border-border rounded-xl p-4 flex items-center gap-4"
+                      className="bg-card border border-border rounded-xl p-4 flex items-start gap-4"
                     >
                       <img
                         src={getProductImage(item.product.id)}
@@ -121,18 +128,22 @@ export default function CartPage() {
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-0.5">
+                        {/* Detailed pricing */}
+                        <div className="text-xs text-muted-foreground font-body mt-1 space-y-0.5">
                           {isFish && item.weight && (
-                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{item.weight >= 1000 ? `${item.weight / 1000}kg` : `${item.weight}g`}</span>
+                            <p>Qty: {item.quantity} × {item.weight >= 1000 ? `${item.weight / 1000} Kg` : `${item.weight}g`} — ₹{(item.product as FishProduct).pricePerKg}/kg</p>
+                          )}
+                          {!isFish && (
+                            <p>Qty: {item.quantity} × ₹{(item.product as KitchenMenuItem).price}</p>
                           )}
                           {item.cuttingType && (
-                            <span className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-full">{item.cuttingType}</span>
+                            <p>Cutting: {item.cuttingType} {cuttingCharge > 0 && <span className="text-primary font-semibold">(+₹{cuttingCharge})</span>}</p>
                           )}
                         </div>
                         {item.customerNote && (
                           <p className="text-xs text-muted-foreground mt-1 italic">Note: {item.customerNote}</p>
                         )}
-                        <p className="font-display text-sm font-bold text-primary mt-1">₹{price}</p>
+                        <p className="font-display text-sm font-bold text-primary mt-1">₹{itemTotal.toFixed(0)}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center border border-border rounded-lg hover:bg-secondary transition-colors">
@@ -143,7 +154,7 @@ export default function CartPage() {
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>
-                      <button onClick={() => removeItem(item.product.id)} className="text-destructive hover:text-destructive/80 ml-2">
+                      <button onClick={() => removeItem(item.product.id)} className="text-destructive hover:text-destructive/80 ml-2 mt-1">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </motion.div>
@@ -151,7 +162,7 @@ export default function CartPage() {
                 })}
               </div>
 
-              {/* Delivery Slot Selection - Only for Pre-Order */}
+              {/* Delivery Slot Selection - Pre-Order or Mixed */}
               {showDeliverySlots && (
                 <div className="bg-card border border-border rounded-xl p-5 mt-6">
                   <div className="flex items-center gap-2 mb-4">
@@ -179,7 +190,7 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* Estimated delivery for Cloud Kitchen */}
+              {/* Estimated delivery for Cloud Kitchen only */}
               {showEstimatedDelivery && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mt-6 flex items-center gap-3">
                   <Zap className="w-5 h-5 text-blue-600" />
@@ -190,8 +201,8 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* Payment Type for Pre-Orders */}
-              {hasPreOrderItems && !isMixedCart && (
+              {/* Payment Type for Pre-Orders / Mixed */}
+              {hasPreOrderItems && (
                 <div className="bg-card border border-border rounded-xl p-5 mt-4">
                   <h3 className="font-display text-base font-semibold mb-3">Payment Option</h3>
                   <div className="space-y-2">
@@ -213,17 +224,26 @@ export default function CartPage() {
                 </div>
               )}
 
-              {/* Summary */}
+              {/* Order Summary */}
               <div className="bg-card border border-border rounded-xl p-5 mt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-body text-sm text-muted-foreground">Subtotal</span>
-                  <span className="font-display text-lg font-bold">₹{totalPrice.toFixed(0)}</span>
+                <h3 className="font-display text-base font-semibold mb-3">Order Summary</h3>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-body text-sm text-muted-foreground">Base Price Total</span>
+                    <span className="font-display text-sm font-semibold">₹{baseTotal.toFixed(0)}</span>
+                  </div>
+                  {totalCuttingCharges > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-body text-sm text-muted-foreground">Cutting Charges</span>
+                      <span className="font-display text-sm font-semibold">₹{totalCuttingCharges.toFixed(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="font-body text-sm text-muted-foreground">Delivery</span>
+                    <span className="font-display text-sm font-semibold text-accent">Free</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-body text-sm text-muted-foreground">Delivery</span>
-                  <span className="font-display text-sm font-semibold text-accent">Free</span>
-                </div>
-                {hasPreOrderItems && !isMixedCart && paymentType === 'partial' && (
+                {hasPreOrderItems && paymentType === 'partial' && (
                   <div className="flex items-center justify-between mb-4 bg-accent/5 -mx-5 px-5 py-2">
                     <span className="font-body text-sm text-accent">Pay now to confirm</span>
                     <span className="font-display text-sm font-bold text-accent">₹{partialAmount}</span>
@@ -235,14 +255,12 @@ export default function CartPage() {
                 </div>
                 <button
                   onClick={handleProceed}
-                  disabled={isMixedCart || (showDeliverySlots && !deliverySlot)}
+                  disabled={showDeliverySlots && !deliverySlot}
                   className="btn-cart w-full mt-4 rounded-lg py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isMixedCart
-                    ? 'Remove conflicting items to proceed'
-                    : showDeliverySlots && !deliverySlot
-                      ? 'Select a Delivery Slot'
-                      : `Proceed to Payment — ₹${hasPreOrderItems && paymentType === 'partial' ? partialAmount : totalPrice.toFixed(0)}`
+                  {showDeliverySlots && !deliverySlot
+                    ? 'Select a Delivery Slot'
+                    : `Proceed to Payment — ₹${hasPreOrderItems && paymentType === 'partial' ? partialAmount : totalPrice.toFixed(0)}`
                   }
                 </button>
                 <button onClick={clearCart} className="w-full text-center text-xs text-muted-foreground mt-2 hover:text-destructive transition-colors">
