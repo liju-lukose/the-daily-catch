@@ -2,23 +2,23 @@ import { FishProduct, KitchenMenuItem, Store, Order, CuttingType } from './types
 
 // Common cutting types
 export const defaultCuttingTypes: CuttingType[] = [
-  { id: 'ct-1', name: 'Whole Fish', image: '🐟', description: 'Complete fish, cleaned and scaled' },
-  { id: 'ct-2', name: 'Fillet', image: '🔪', description: 'Boneless fillet cuts' },
-  { id: 'ct-3', name: 'Steaks', image: '🥩', description: 'Cross-cut steaks with bone' },
-  { id: 'ct-4', name: 'Cubes', image: '🧊', description: 'Bite-sized cubes for curry' },
-  { id: 'ct-5', name: 'Cleaned Only', image: '✨', description: 'Cleaned, gutted, scales removed' },
+  { id: 'ct-1', name: 'Whole Fish', image: '🐟', description: 'Complete fish, cleaned and scaled', price: 10 },
+  { id: 'ct-2', name: 'Fillet', image: '🔪', description: 'Boneless fillet cuts', price: 50 },
+  { id: 'ct-3', name: 'Steaks', image: '🥩', description: 'Cross-cut steaks with bone', price: 30 },
+  { id: 'ct-4', name: 'Cubes', image: '🧊', description: 'Bite-sized cubes for curry', price: 20 },
+  { id: 'ct-5', name: 'Cleaned Only', image: '✨', description: 'Cleaned, gutted, scales removed', price: 10 },
 ];
 
 export const shrimpCuttingTypes: CuttingType[] = [
-  { id: 'ct-6', name: 'Shell On', image: '🦐', description: 'With shell, deveined' },
-  { id: 'ct-7', name: 'Peeled', image: '🍤', description: 'Shell removed, deveined' },
-  { id: 'ct-8', name: 'Butterfly', image: '🦋', description: 'Split and flattened' },
+  { id: 'ct-6', name: 'Shell On', image: '🦐', description: 'With shell, deveined', price: 20 },
+  { id: 'ct-7', name: 'Peeled', image: '🍤', description: 'Shell removed, deveined', price: 40 },
+  { id: 'ct-8', name: 'Butterfly', image: '🦋', description: 'Split and flattened', price: 50 },
 ];
 
 export const squidCuttingTypes: CuttingType[] = [
-  { id: 'ct-9', name: 'Rings', image: '⭕', description: 'Classic calamari rings' },
-  { id: 'ct-10', name: 'Strips', image: '📏', description: 'Long strips for stir-fry' },
-  { id: 'ct-11', name: 'Whole Cleaned', image: '✨', description: 'Whole tube, cleaned' },
+  { id: 'ct-9', name: 'Rings', image: '⭕', description: 'Classic calamari rings', price: 30 },
+  { id: 'ct-10', name: 'Strips', image: '📏', description: 'Long strips for stir-fry', price: 20 },
+  { id: 'ct-11', name: 'Whole Cleaned', image: '✨', description: 'Whole tube, cleaned', price: 10 },
 ];
 
 export const mockCatchOfTheDay: FishProduct[] = [

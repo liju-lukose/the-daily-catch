@@ -3,7 +3,7 @@ import { CartItem, FishProduct, KitchenMenuItem, DeliverySlot, PaymentType } fro
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: FishProduct | KitchenMenuItem, options?: { weight?: number; storeId?: string; cuttingType?: string; deliveryInstructions?: string; customerNote?: string; quantity?: number }) => void;
+  addItem: (product: FishProduct | KitchenMenuItem, options?: { weight?: number; storeId?: string; cuttingType?: string; cuttingPrice?: number; deliveryInstructions?: string; customerNote?: string; quantity?: number }) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -23,7 +23,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [deliverySlot, setDeliverySlot] = useState<DeliverySlot | null>(null);
   const [paymentType, setPaymentType] = useState<PaymentType>('full');
 
-  const addItem = useCallback((product: FishProduct | KitchenMenuItem, options?: { weight?: number; storeId?: string; cuttingType?: string; deliveryInstructions?: string; customerNote?: string; quantity?: number }) => {
+  const addItem = useCallback((product: FishProduct | KitchenMenuItem, options?: { weight?: number; storeId?: string; cuttingType?: string; cuttingPrice?: number; deliveryInstructions?: string; customerNote?: string; quantity?: number }) => {
     const qty = options?.quantity ?? 1;
     setItems(prev => {
       const existing = prev.find(i => i.product.id === product.id && i.weight === options?.weight && i.cuttingType === options?.cuttingType);
@@ -40,6 +40,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         weight: options?.weight,
         storeId: options?.storeId,
         cuttingType: options?.cuttingType,
+        cuttingPrice: options?.cuttingPrice,
         deliveryInstructions: options?.deliveryInstructions,
         customerNote: options?.customerNote,
       }];
@@ -66,11 +67,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = items.reduce((sum, i) => {
-    const price = 'pricePerKg' in i.product
+    const basePrice = 'pricePerKg' in i.product
       ? (i.product.pricePerKg * (i.weight || 1000) / 1000)
       : i.product.price;
-    return sum + price * i.quantity;
+    const cuttingCharge = i.cuttingPrice ?? 0;
+    return sum + (basePrice * i.quantity) + cuttingCharge;
   }, 0);
+
+  const totalCuttingCharges = items.reduce((sum, i) => sum + (i.cuttingPrice ?? 0), 0);
 
   const hasPreOrderItems = items.some(i => 'isPreOrder' in i.product && (i.product as FishProduct).isPreOrder);
 
